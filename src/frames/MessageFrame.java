@@ -3,6 +3,8 @@
  */
 package frames;
 
+import java.io.UnsupportedEncodingException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -19,5 +21,7 @@ public class MessageFrame extends NSQFrame {
 	public MessageFrame() {
 		this.frameId = 2;
 	}
+	
+	
 	
 }

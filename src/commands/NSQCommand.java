@@ -19,6 +19,18 @@ public class NSQCommand {
 
 	protected static Log log = LogFactory.getLog(NSQCommand.class);
 	
+	public static NSQCommand instance(String line) {
+		NSQCommand n = new NSQCommand();
+		n.setLine(line);
+		return n;
+	}
+	
+	public static NSQCommand instance(String line, byte[] bytes) {
+		NSQCommand n = instance(line);
+		n.addBytes(bytes);
+		return n;
+	}
+	
 	String line;
 	List<byte[]> data = new ArrayList<byte[]>();
 	

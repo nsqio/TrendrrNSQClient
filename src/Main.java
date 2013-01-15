@@ -76,12 +76,17 @@ public class Main {
         channel.write(buf);
         
         
-        
-        NSQCommand command = new NSQCommand();
-        command.setLine("IDENTIFY");
-        command.addBytes("{\"short_id\":\"dustin-box\", \"long_id\":\"dustin-long-id\"}".getBytes("utf8"));
-        conn.command(command);
+        //IDENTIFY doesnt work!
+//        NSQCommand command = new NSQCommand();
+//        command.setLine("IDENTIFY");
+//        command.addBytes("{\"short_id\":\"dustin-box\", \"long_id\":\"dustin-long-id\"}".getBytes("utf8"));
+//        conn.command(command);
 //        
+        
+        //subscribe
+        conn.command(NSQCommand.instance("SUB test dustin"));
+        //ready
+        conn.command(NSQCommand.instance("RDY 100"));
         
 	}
 	

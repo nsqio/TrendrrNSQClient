@@ -33,7 +33,8 @@ public class NSQEncoder extends OneToOneEncoder {
 		}
 		
 		NSQCommand com = (NSQCommand)message;
-		
+
+		System.out.println("Sending: " + com.getLine());
 		ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
 		
 		buf.writeBytes(com.getLine().getBytes("utf8"));

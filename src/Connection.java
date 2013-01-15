@@ -10,6 +10,7 @@ import org.jboss.netty.channel.ChannelFuture;
 import commands.NSQCommand;
 
 import frames.NSQFrame;
+import frames.ResponseFrame;
 
 
 /**
@@ -22,7 +23,7 @@ public class Connection {
 	protected static Log log = LogFactory.getLog(Connection.class);
 	
 	Channel channel;
-	
+	int heartbeats = 0;
 	public Connection(Channel channel) {
 		this.channel = channel;
 		this.channel.setAttachment(this);
@@ -30,8 +31,25 @@ public class Connection {
 	
 	
 	public void incoming(NSQFrame frame) {
+		if (frame instanceof ResponseFrame) {
+			if ("_heartbeat_".equals(((ResponseFrame) frame).getMessage())) {
+				this.heartbeat();
+				return;
+			}
+			
+			
+		}
+		
 		//incoming message, give back to whoever needs it.
 		System.out.println("GOT FRAME! " + frame);
+	}
+	
+	
+	void heartbeat() {
+		System.out.println("HEARTBEAT!");
+		this.heartbeats++;
+		//send NOP here.
+		this.command(NSQCommand.instance("NOP"));
 	}
 	
 	void disconnected() {
