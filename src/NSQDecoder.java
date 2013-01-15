@@ -11,6 +11,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
 import org.jboss.netty.handler.codec.replay.VoidEnum;
 
+import frames.MessageFrame;
 import frames.NSQFrame;
 
 
