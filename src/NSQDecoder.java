@@ -62,7 +62,7 @@ public class NSQDecoder extends ReplayingDecoder<NSQDecoder.MyDecoderState>{
 	    	 checkpoint(MyDecoderState.READ_DATA);
 	    	 break;
 	     case READ_DATA:
-	    	 ChannelBuffer bytes = buf.readBytes(frame.getSize());
+	    	 ChannelBuffer bytes = buf.readBytes(frame.getSize()-4); //subtract 4 because the frame id is included
 	    	 this.frame.setData(bytes.array());
 	    	 checkpoint(MyDecoderState.READ_SIZE);
 	    	 return this.frame;

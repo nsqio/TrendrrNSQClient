@@ -3,6 +3,8 @@
  */
 package frames;
 
+import java.io.UnsupportedEncodingException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -20,4 +22,16 @@ public class ErrorFrame extends NSQFrame {
 		this.frameId = 1;
 	}
 	
+	public String getErrorMessage() {
+		try {
+			return new String(this.data, "utf8");
+		} catch (UnsupportedEncodingException e) {
+			log.error("Caught", e);
+		}
+		return null;
+	}
+	
+	public String toString() {
+		return this.getErrorMessage();
+	}
 }
