@@ -1,4 +1,4 @@
-package com.trendrr.nsq;
+package com.trendrr.nsq.netty;
 /**
  * 
  */
@@ -10,6 +10,8 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
+
+import com.trendrr.nsq.NSQCommand;
 
 
 
@@ -34,7 +36,6 @@ public class NSQEncoder extends OneToOneEncoder {
 		
 		NSQCommand com = (NSQCommand)message;
 
-		System.out.println("Sending: " + com.getLine());
 		ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
 		
 		buf.writeBytes(com.getLine().getBytes("utf8"));

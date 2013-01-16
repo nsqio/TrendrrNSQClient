@@ -1,4 +1,4 @@
-package com.trendrr.nsq;
+package com.trendrr.nsq.netty;
 /**
  * 
  */

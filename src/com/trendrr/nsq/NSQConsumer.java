@@ -29,53 +29,24 @@ import com.trendrr.oss.Timeframe;
  * @created Jan 14, 2013
  * 
  */
-public class NSQConsumer {
+public class NSQConsumer extends NSQProducer {
 
 	protected static Log log = LogFactory.getLog(NSQConsumer.class);
 	
-	HashMap<String, Connection> connections = new HashMap<String, Connection>();
-	
 	NSQLookup lookup;
-	
 	String topic = null;
 	String channel = null;
 	MessageCallback callback;
 	
-	// Configure the client.
-    ClientBootstrap bootstrap = null;
-    public static final int MAGIC_PROTOCOL_VERSION = 538990130; //uhh, wtf is this?
     
 	public NSQConsumer(NSQLookup lookup, String topic, String channel, MessageCallback callback) {
+		super(1);
 		this.lookup = lookup;
 	    this.topic = topic;
 	    this.channel = channel;
 	    this.callback = callback;
 	}
 	
-	/**
-	 * immediately starts consuming.
-	 */
-	public void start() {
-		this.connect();
-	}
-	/**
-	 * use this if you want to specify your own netty executors. by default will use
-	 * 
-	 * Executors.newCachedThreadPool()
-	 * 
-	 * @param boss
-	 * @param worker
-	 */
-	public synchronized void setNettyExecutors(Executor boss, Executor worker) {
-		if (this.bootstrap != null) {
-			this.bootstrap.releaseExternalResources();
-		}
-		this.bootstrap = new ClientBootstrap(
-	            new NioClientSocketChannelFactory(
-	                    boss,
-	                    worker));
-		bootstrap.setPipelineFactory(new NSQPipeline());
-	}
 	/**
 	 * 
 	 * Connects and subscribes to the requested topic and channel.
@@ -94,7 +65,7 @@ public class NSQConsumer {
 		}
 		DynMap mp = lookup.lookup(this.topic);
 		System.out.println(mp.toJSONString());
-		for (DynMap node : mp.getList(DynMap.class, "data.producers")) {
+		for (DynMap node : mp.getListOrEmpty(DynMap.class, "data.producers")) {
 			
 			String key = node.getString("address") + ":" + node.getInteger("tcp_port");
 			if (this.connections.containsKey(key)) {
@@ -102,20 +73,7 @@ public class NSQConsumer {
 				continue;
 			}
 			
-			// Start the connection attempt.
-	        ChannelFuture future = bootstrap.connect(new InetSocketAddress(node.getString("address"), node.getInteger("tcp_port")));
-
-	        // Wait until the connection attempt succeeds or fails.
-	        Channel channel = future.awaitUninterruptibly().getChannel();
-	        if (!future.isSuccess()) {
-	            log.error("Caught", future.getCause());
-	            continue;
-	        }
-	        Connection conn = new Connection(channel, this);
-	        ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
-	        buf.writeInt(MAGIC_PROTOCOL_VERSION);
-	        channel.write(buf);
-			this.connections.put(key, conn);
+			Connection conn = this.createConnection(node.getString("address"), node.getInteger("tcp_port"));
 			conn.setCallback(callback);
 			/*
 			 * subscribe
@@ -125,38 +83,5 @@ public class NSQConsumer {
 		}
 		
 		this.cleanupOldConnections();
-	}
-	
-	/**
-	 * will run through and remove any connections that have not recieved a ping in the last 2 minutes.
-	 */
-	public synchronized void cleanupOldConnections() {
-		ArrayList<Connection> cons = new ArrayList<Connection>();
-		
-		Date cutoff = Timeframe.MINUTES.add(new Date(), -2);
-		
-		for (String k : this.connections.keySet()) {
-			Connection c = this.connections.get(k);
-			if (cutoff.after(c.getLastHeartbeat())) {
-				cons.add(c);
-			}
-		}
-		for (Connection c: cons) {
-			c.close();
-		}
-	}
-	
-	synchronized void disconnected(Connection connection) {
-		for (String k : this.connections.keySet()) {
-			if (this.connections.get(k) == connection) {
-				this.connections.remove(k);
-			}
-		}
-	}
-	
-	public synchronized void close() {
-		for (Connection c : connections.values()) {
-			c.close();
-		}
 	}
 }

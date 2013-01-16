@@ -32,6 +32,6 @@ public class ResponseFrame extends NSQFrame {
 	}
 	
 	public String toString() {
-		return this.getMessage();
+		return "RESPONSE: " + this.getMessage();
 	}
 }

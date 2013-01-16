@@ -1,4 +1,4 @@
-package com.trendrr.nsq;
+package com.trendrr.nsq.netty;
 /**
  * 
  */
@@ -50,12 +50,10 @@ public class NSQDecoder extends ReplayingDecoder<NSQDecoder.MyDecoderState>{
 		switch (state) {
 	     case READ_SIZE:
 	       size = buf.readInt();
-	       System.out.println("Got size: " + size);
 	       checkpoint(MyDecoderState.READ_FRAME_ID);
 	       break;
 	     case READ_FRAME_ID:
 	    	 int id = buf.readInt();
-	    	 System.out.println("GOT ID: " + id);
 	    	 this.frame = NSQFrame.instance(id);
 	    	 if (this.frame == null) {
 	    		 //uhh, bad response from server..  what should we do?

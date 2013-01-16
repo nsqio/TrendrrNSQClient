@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 
+import com.trendrr.nsq.frames.ErrorFrame;
 import com.trendrr.nsq.frames.MessageFrame;
 import com.trendrr.nsq.frames.NSQFrame;
 import com.trendrr.nsq.frames.ResponseFrame;
@@ -36,9 +37,9 @@ public class Connection {
 	int totalMessages = 0;
 	int messagesPerBatch = 200;
 	
-	NSQConsumer client = null;
+	NSQProducer client = null;
 	
-	public Connection(Channel channel, NSQConsumer client) {
+	public Connection(Channel channel, NSQProducer client) {
 		this.channel = channel;
 		this.channel.setAttachment(this);
 		this.client = client;
@@ -62,7 +63,14 @@ public class Connection {
 			if ("_heartbeat_".equals(((ResponseFrame) frame).getMessage())) {
 				this.heartbeat();
 				return;
-			}	
+			} else {
+				this.client._incomingResponse((ResponseFrame)frame, this);
+				return;
+			}
+		}
+		if (frame instanceof ErrorFrame) {
+			this.client._incomingError((ErrorFrame)frame, this);
+			return;
 		}
 		if (frame instanceof MessageFrame) {
 			this.totalMessages++;
@@ -100,7 +108,11 @@ public class Connection {
 		this.command(NSQCommand.instance("NOP"));
 	}
 	
-	void disconnected() {
+	/**
+	 * called when this connection is disconnected socket level
+	 * this is used internally, generally close() should be used instead.
+	 */
+	public void _disconnected() {
 		//clean up anything that needs cleaning up.
 		this.client.disconnected(this);
 	} 
@@ -133,7 +145,7 @@ public class Connection {
 		} catch (Exception x) {
 			log.error("Caught", x);
 		}
-		this.disconnected();
+		this._disconnected();
 	}
 	
 	public ChannelFuture command(NSQCommand command) {

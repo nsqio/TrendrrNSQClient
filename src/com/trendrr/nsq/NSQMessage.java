@@ -3,6 +3,7 @@
  */
 package com.trendrr.nsq;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 import org.apache.commons.logging.Log;
@@ -29,7 +30,22 @@ public class NSQMessage {
 	 * Finished processing this message, let nsq know so it doesnt get reprocessed.
 	 */
 	public void finished() {
-		this.connection.command(NSQCommand.instance("FIN " + StringHelper.toHex(id)));
+		try {
+			this.connection.command(NSQCommand.instance("FIN " + new String(id, "ascii")));
+		} catch (UnsupportedEncodingException e) {
+			log.error("Caught", e);
+		}
+	}
+	
+	/**
+	 * indicates a problem with processing, puts it back on the queue.
+	 */
+	public void requeue() {
+		try {
+			this.connection.command(NSQCommand.instance("REQ " + new String(id, "ascii")));
+		} catch (UnsupportedEncodingException e) {
+			log.error("Caught", e);
+		}
 	}
 	
 	public Connection getConnection() {
@@ -61,8 +77,5 @@ public class NSQMessage {
 	}
 	public void setMessage(byte[] message) {
 		this.message = message;
-	}
-
-	
-	
+	}	
 }

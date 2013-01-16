@@ -40,7 +40,6 @@ public class MessageFrame extends NSQFrame {
 		this.messageId = new byte[16];
 		
 		buf.readBytes(this.messageId);
-		
 		this.messageBody = buf.readBytes(buf.readableBytes()).array();
 	}
 	

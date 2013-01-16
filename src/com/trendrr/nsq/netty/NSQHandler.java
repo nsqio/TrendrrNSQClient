@@ -1,4 +1,4 @@
-package com.trendrr.nsq;
+package com.trendrr.nsq.netty;
 /**
  * 
  */
@@ -11,6 +11,7 @@ import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
+import com.trendrr.nsq.Connection;
 import com.trendrr.nsq.frames.NSQFrame;
 
 
@@ -41,7 +42,7 @@ public class NSQHandler extends SimpleChannelUpstreamHandler {
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
     	Connection con = (Connection)e.getChannel().getAttachment();
 		if (con != null) {
-			con.disconnected();
+			con._disconnected();
 		} else {
 			log.warn("No connection set for : " + e.getChannel());
 		}
@@ -55,7 +56,7 @@ public class NSQHandler extends SimpleChannelUpstreamHandler {
         
         Connection con = (Connection)e.getChannel().getAttachment();
 		if (con != null) {
-			con.disconnected();
+			con._disconnected();
 		} else {
 			log.warn("No connection set for : " + e.getChannel());
 		}
