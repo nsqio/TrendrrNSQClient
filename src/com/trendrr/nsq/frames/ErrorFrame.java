@@ -1,7 +1,7 @@
 /**
  * 
  */
-package frames;
+package com.trendrr.nsq.frames;
 
 import java.io.UnsupportedEncodingException;
 

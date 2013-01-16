@@ -1,7 +1,7 @@
 /**
  * 
  */
-package frames;
+package com.trendrr.nsq.frames;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

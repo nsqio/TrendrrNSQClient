@@ -1,6 +1,8 @@
+package com.trendrr.nsq;
 /**
  * 
  */
+
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

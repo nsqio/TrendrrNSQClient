@@ -1,3 +1,4 @@
+package com.trendrr.nsq;
 /**
  * 
  */
@@ -10,7 +11,8 @@ import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
-import frames.NSQFrame;
+import com.trendrr.nsq.frames.NSQFrame;
+
 
 
 /**
@@ -43,7 +45,7 @@ public class NSQHandler extends SimpleChannelUpstreamHandler {
 		} else {
 			log.warn("No connection set for : " + e.getChannel());
 		}
-    }
+    } 
     
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)

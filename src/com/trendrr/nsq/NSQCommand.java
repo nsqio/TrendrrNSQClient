@@ -1,4 +1,4 @@
-package commands;
+package com.trendrr.nsq;
 /**
  * 
  */
