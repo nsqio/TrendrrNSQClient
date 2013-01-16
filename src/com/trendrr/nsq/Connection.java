@@ -36,9 +36,9 @@ public class Connection {
 	int totalMessages = 0;
 	int messagesPerBatch = 200;
 	
-	NSQReader client = null;
+	NSQConsumer client = null;
 	
-	public Connection(Channel channel, NSQReader client) {
+	public Connection(Channel channel, NSQConsumer client) {
 		this.channel = channel;
 		this.channel.setAttachment(this);
 		this.client = client;

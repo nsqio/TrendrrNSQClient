@@ -5,6 +5,7 @@ package com.trendrr.nsq;
 
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -91,7 +92,28 @@ public class Main {
 //        conn.command(NSQCommand.instance("SUB test dustin"));
 //        //ready
 //        conn.command(NSQCommand.instance("RDY 100"));
-        
+        NSQLookup lookup = new NSQLookup();
+        lookup.addAddr("localhost", 4161);
+		
+		
+		NSQConsumer consumer = new NSQConsumer(lookup, "test", "dustin", new MessageCallback() {
+			
+			@Override
+			public void message(NSQMessage message) {
+				try {
+					System.out.println("GOT MESSAGE: " + new String(message.getMessage(), "utf8"));
+				} catch (UnsupportedEncodingException e) {
+					log.error("Caught", e);
+				}
+			}
+			
+			@Override
+			public void error(Exception x) {
+				log.warn("Caught", x);
+			}
+		});
+		
+		consumer.start();
 	}
 	
 }

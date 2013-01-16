@@ -29,9 +29,9 @@ import com.trendrr.oss.Timeframe;
  * @created Jan 14, 2013
  * 
  */
-public class NSQReader {
+public class NSQConsumer {
 
-	protected static Log log = LogFactory.getLog(NSQReader.class);
+	protected static Log log = LogFactory.getLog(NSQConsumer.class);
 	
 	HashMap<String, Connection> connections = new HashMap<String, Connection>();
 	
@@ -45,13 +45,19 @@ public class NSQReader {
     ClientBootstrap bootstrap = null;
     public static final int MAGIC_PROTOCOL_VERSION = 538990130; //uhh, wtf is this?
     
-	public NSQReader(NSQLookup lookup, String topic, String channel, MessageCallback callback) {
+	public NSQConsumer(NSQLookup lookup, String topic, String channel, MessageCallback callback) {
 		this.lookup = lookup;
 	    this.topic = topic;
 	    this.channel = channel;
 	    this.callback = callback;
 	}
 	
+	/**
+	 * immediately starts consuming.
+	 */
+	public void start() {
+		this.connect();
+	}
 	/**
 	 * use this if you want to specify your own netty executors. by default will use
 	 * 
@@ -87,7 +93,8 @@ public class NSQReader {
 			return;
 		}
 		DynMap mp = lookup.lookup(this.topic);
-		for (DynMap node : mp.getList(DynMap.class, "producers")) {
+		System.out.println(mp.toJSONString());
+		for (DynMap node : mp.getList(DynMap.class, "data.producers")) {
 			
 			String key = node.getString("address") + ":" + node.getInteger("tcp_port");
 			if (this.connections.containsKey(key)) {
@@ -109,11 +116,11 @@ public class NSQReader {
 	        buf.writeInt(MAGIC_PROTOCOL_VERSION);
 	        channel.write(buf);
 			this.connections.put(key, conn);
-			
+			conn.setCallback(callback);
 			/*
 			 * subscribe
 			 */
-			conn.command(NSQCommand.instance("SUB " + topic + " " + channel));
+			conn.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
 			conn.command(NSQCommand.instance("RDY " + conn.getMessagesPerBatch()));
 		}
 		
