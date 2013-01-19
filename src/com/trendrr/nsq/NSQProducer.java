@@ -14,6 +14,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,6 +53,9 @@ public class NSQProducer {
 	protected static Log log = LogFactory.getLog(NSQProducer.class);
 	
 	protected HashMap<String, Connection> connections = new HashMap<String, Connection>();
+	protected ArrayList<String> connectionKeys = new ArrayList<String>(); //keys to roundrobin connections.
+	
+	protected AtomicLong produced = new AtomicLong(0l);
 	
 	Semaphore inflight;
 	
@@ -101,8 +105,25 @@ public class NSQProducer {
 			log.error("Caught", e);
 		}
 		
-		//TODO: roundrobin the connections
-		Connection conn = this.connections.values().iterator().next();
+		/*
+		 * Roundrobin the connections if we have multiple.. 
+		 */
+		int ind = (int)(this.produced.incrementAndGet() % this.connectionKeys.size());
+		Connection conn = null;
+		try {
+			conn = this.connections.get(this.connectionKeys.get(ind));
+		} catch (Exception x) {
+			//could happen array index out of bounds, since we
+			//arent being atomic.  nbd, we will just start at ind-1;
+			conn = this.connections.get(this.connectionKeys.get(this.connectionKeys.size()-1));
+		}
+		
+		if (conn == null) {
+			//alright alright, roundrobin didn't work
+			log.warn("Roundrobin failed for unknown reason, help help");
+			conn = this.connections.values().iterator().next();
+		}
+		
 		NSQCommand command = NSQCommand.instance("PUB " + topic, message);
 		conn.command(command);
 	}
@@ -192,6 +213,7 @@ public class NSQProducer {
 			
 			Connection conn = this.createConnection(addr[0], Integer.parseInt(addr[1]));
 			this.connections.put(key, conn);
+			this.connectionKeys.add(key);
 		}
 		this.cleanupOldConnections();
 	}
@@ -208,6 +230,7 @@ public class NSQProducer {
 			Connection c = this.connections.get(k);
 			if (cutoff.after(c.getLastHeartbeat())) {
 				cons.add(c);
+				this.connectionKeys.remove(k);
 			}
 		}
 		for (Connection c: cons) {
@@ -219,6 +242,7 @@ public class NSQProducer {
 		for (String k : this.connections.keySet()) {
 			if (this.connections.get(k) == connection) {
 				this.connections.remove(k);
+				this.connectionKeys.remove(k);
 				System.out.println("removing: " + k);
 			}
 			//clear out the semiphores
