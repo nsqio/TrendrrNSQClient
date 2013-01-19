@@ -41,7 +41,7 @@ public class NSQProducer {
 	/**
 	 * Protocol version sent to nsqd on initial connect
 	 */
-	public static int MAGIC_PROTOCOL_VERSION = 538990130; //uhh, wtf is this?
+	public static byte[] MAGIC_PROTOCOL_VERSION = "  V2".getBytes();
     public static long LOOKUP_PERIOD = 60*1000; //how often to recheck for new nodes (and clean up non responsive nodes)
     
     /**
@@ -166,7 +166,7 @@ public class NSQProducer {
         }
         Connection conn = new Connection(channel, this);
         ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
-        buf.writeInt(MAGIC_PROTOCOL_VERSION);
+        buf.writeBytes(MAGIC_PROTOCOL_VERSION);
         channel.write(buf);
         return conn;
 	}
