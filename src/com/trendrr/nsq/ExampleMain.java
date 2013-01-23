@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 //import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +24,9 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
+import com.trendrr.nsq.exceptions.BadMessageException;
+import com.trendrr.nsq.exceptions.BadTopicException;
+import com.trendrr.nsq.exceptions.DisconnectedException;
 import com.trendrr.oss.StringHelper;
 
 
@@ -45,22 +50,67 @@ public class ExampleMain {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer producer = new NSQProducer(50).addAddress("localhost", 4150);		
+		NSQProducer2 producer = new NSQProducer2().addAddress("localhost", 4150, 1);		
 		producer.start();
 		start = new Date();
-		String msg = StringHelper.randomString(10000);
-
+		String msg = StringHelper.randomString(10);
+		
+//		try {
+//			producer.produce("test3", msg.getBytes());
+//			System.out.println("PRODUCE 1");
+//
+//			
+//			List<byte[]> messages = new ArrayList<byte[]>();
+//			messages.add(msg.getBytes());
+//			
+//			producer.produceMulti("test3", messages);
+//			if (true) {
+//				System.exit(1);
+//			}
+//			
+//		} catch (DisconnectedException e1) {
+//			log.error("Caught", e1);
+//		} catch (BadTopicException e1) {
+//			log.error("Caught", e1);
+//		} catch (BadMessageException e1) {
+//			log.error("Caught", e1);
+//		}
+		
+		
+//
+//		for (int i=0; i < 50000; i++) {
+//			if (i % 1000 == 0) {
+//				System.out.println("producer: " + i);
+//			}
+//			try {
+//				producer.produce("speedtest", (msg + i).getBytes("utf8"));
+//			} catch (DisconnectedException e) {
+//				log.error("Caught", e);
+//			} catch (BadTopicException e) {
+//				log.error("Caught", e);
+//			} catch (BadMessageException e) { 
+//				log.error("Caught", e);
+//			}
+//		}
+//		
+////		My System does this in about 10 seconds, so 5k messages per second on a single connection
+//		System.out.println("Produced 50k messages in " + (new Date().getTime()-start.getTime()) + " millis");
+//		
+		
+		start = new Date();
 		for (int i=0; i < 50000; i++) {
 			if (i % 1000 == 0) {
 				System.out.println("producer: " + i);
 			}
-			producer.produce("speedtest", (msg + i).getBytes("utf8"));
+			producer.produceBatch("speedtest2", (msg + i).getBytes("utf8"));
 		}
 		
 //		My System does this in about 10 seconds, so 5k messages per second on a single connection
-		System.out.println("Produced 50k messages in " + (new Date().getTime()-start.getTime()) + " millis");
+		System.out.println("Produced 50k batch messages in " + (new Date().getTime()-start.getTime()) + " millis");
 		
 		
+		if (true)
+			return;
 		
         NSQLookup lookup = new NSQLookup();
         lookup.addAddr("localhost", 4161);

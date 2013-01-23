@@ -1,0 +1,128 @@
+/**
+ * 
+ */
+package com.trendrr.nsq;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+
+/**
+ * 
+ * A class that will collect messages and send as a batch after N messages or N bytes are written.
+ * 
+ * 
+ * 
+ * @author Dustin Norlander
+ * @created Jan 22, 2013
+ * 
+ */
+public class Batch {
+
+	protected static Log log = LogFactory.getLog(Batch.class);
+	
+	protected long maxBytes = 1048576l;// default to 1 megabyte
+	protected int maxMessages = 500;	
+	protected long maxSeconds = 30;
+	protected String topic;
+
+	protected long totalMessages = 0l;
+	protected long totalBytes = 0l; 
+	protected Date expire = null;
+	protected List<byte[]> messages = new ArrayList<byte[]>();
+	protected BatchCallback callback = null;
+	
+	public Batch(String topic, BatchCallback callback) {
+		this.topic = topic;
+		this.callback = callback;
+	}
+	
+	public synchronized BatchCallback getCallback() {
+		return callback;
+	}
+
+
+	public synchronized void setCallback(BatchCallback callback) {
+		this.callback = callback;
+	}
+
+
+	
+
+	
+	public synchronized void addMessage(byte[] bytes) {
+		if (expire == null)
+			expire = new Date(new Date().getTime() + (1000*this.maxSeconds));
+		totalMessages++;
+		totalBytes += bytes.length;
+		messages.add(bytes);
+	}
+	
+	
+	
+	/**
+	 * gets and clears if the current batch is ready.  else returns null
+	 * @return
+	 */
+	public synchronized List<byte[]> getAndClearIfReady() {
+		if (this.totalBytes >= this.maxBytes) {
+			return getAndClear();
+		}
+		if (this.totalMessages >= this.maxMessages) {
+			return getAndClear();
+		}
+ 		if (this.expire != null && this.expire.before(new Date())) {
+ 			return getAndClear();
+ 		}
+ 		return null;
+	}
+	
+	public synchronized List<byte[]> getAndClear() {
+		this.totalBytes = 0;
+		this.totalMessages = 0;
+		this.expire = null;
+		List<byte[]> messages = this.messages;
+		this.messages = new ArrayList<byte[]>();
+		return messages;
+		
+	}
+	
+	public synchronized long getMaxSeconds() {
+		return maxSeconds;
+	}
+
+	public synchronized void setMaxSeconds(long maxSeconds) {
+		this.maxSeconds = maxSeconds;
+	}
+
+	
+	public synchronized long getMaxBytes() {
+		return maxBytes;
+	}
+
+	public synchronized void setMaxBytes(long maxBytes) {
+		this.maxBytes = maxBytes;
+	}
+
+	public synchronized int getMaxMessages() {
+		return maxMessages;
+	}
+
+	public synchronized void setMaxMessages(int maxMessages) {
+		this.maxMessages = maxMessages;
+	}
+
+	public synchronized String getTopic() {
+		return topic;
+	}
+
+	public synchronized void setTopic(String topic) {
+		this.topic = topic;
+	}
+	
+	
+}

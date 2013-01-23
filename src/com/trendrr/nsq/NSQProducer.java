@@ -185,11 +185,12 @@ public class NSQProducer {
             log.error("Caught", future.getCause());
             return null;
         }
-        Connection conn = new Connection(channel, this);
-        ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
-        buf.writeBytes(MAGIC_PROTOCOL_VERSION);
-        channel.write(buf);
-        return conn;
+//        Connection conn = new Connection(channel, this);
+//        ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
+//        buf.writeBytes(MAGIC_PROTOCOL_VERSION);
+//        channel.write(buf);
+//        return conn;
+        return null;
 	}
 	
 	/**
