@@ -39,6 +39,19 @@ public class NSQEncoder extends OneToOneEncoder {
 		ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
 		System.out.println(com.getLine());
 		buf.writeBytes(com.getLine().getBytes("utf8"));
+		
+		//for MPUB messages.
+		if (com.getData().size() > 1) {
+			//write total bodysize and message size
+			int bodySize = 4; //4 for total messages int.
+			for (byte[] data : com.getData()) {
+				bodySize += 4; //message size
+				bodySize += data.length;
+			}
+			buf.writeInt(bodySize);
+			buf.writeInt(com.getData().size());
+		}
+		
 		for (byte[] data : com.getData()) {
 			System.out.println(data.length);
 			buf.writeInt(data.length);

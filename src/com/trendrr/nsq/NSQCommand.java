@@ -18,7 +18,7 @@ import org.apache.commons.logging.LogFactory;
 public class NSQCommand {
 
 	protected static Log log = LogFactory.getLog(NSQCommand.class);
-	
+
 	public static NSQCommand instance(String line) {
 		NSQCommand n = new NSQCommand();
 		n.setLine(line);

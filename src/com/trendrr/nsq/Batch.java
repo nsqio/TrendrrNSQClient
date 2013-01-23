@@ -30,15 +30,16 @@ public class Batch {
 	protected long maxSeconds = 30;
 	protected String topic;
 
-	protected long totalMessages = 0l;
-	protected long totalBytes = 0l; 
+	protected long totalMessages;
+	protected long totalBytes; 
 	protected Date expire = null;
-	protected List<byte[]> messages = new ArrayList<byte[]>();
+	protected List<byte[]> messages;
 	protected BatchCallback callback = null;
 	
 	public Batch(String topic, BatchCallback callback) {
 		this.topic = topic;
 		this.callback = callback;
+		this.getAndClear(); //set the default values for everything.
 	}
 	
 	public synchronized BatchCallback getCallback() {
@@ -59,6 +60,7 @@ public class Batch {
 			expire = new Date(new Date().getTime() + (1000*this.maxSeconds));
 		totalMessages++;
 		totalBytes += bytes.length;
+		totalBytes += 4; //for the message size
 		messages.add(bytes);
 	}
 	
@@ -82,7 +84,7 @@ public class Batch {
 	}
 	
 	public synchronized List<byte[]> getAndClear() {
-		this.totalBytes = 0;
+		this.totalBytes = 4;
 		this.totalMessages = 0;
 		this.expire = null;
 		List<byte[]> messages = this.messages;

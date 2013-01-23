@@ -101,9 +101,19 @@ public class NSQProducer extends AbstractNSQClient {
 	 * @throws BadMessageException
 	 */
 	public void produceMulti(String topic, List<byte[]> message) throws DisconnectedException, BadTopicException, BadMessageException{
+		if (message == null || message.isEmpty()) {
+			return;
+		}
+		
+		if (message.size() == 1) {
+			//encoding will be screwed up if we MPUB a 
+			this.produce(topic, message.get(0));
+			return;
+		}
+		
 		Connection c = this.connections.next();
 		
-		NSQCommand command = NSQCommand.instance("MPUB " + topic + " " + message.size());
+		NSQCommand command = NSQCommand.instance("MPUB " + topic);
 		command.setData(message);
 		
 		
