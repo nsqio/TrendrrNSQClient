@@ -27,6 +27,7 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import com.trendrr.nsq.exceptions.BadMessageException;
 import com.trendrr.nsq.exceptions.BadTopicException;
 import com.trendrr.nsq.exceptions.DisconnectedException;
+import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
 import com.trendrr.oss.StringHelper;
 
 
@@ -50,7 +51,7 @@ public class ExampleMain {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer2 producer = new NSQProducer2().addAddress("localhost", 4150, 1);		
+		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);		
 		producer.start();
 		start = new Date();
 		String msg = StringHelper.randomString(10);
@@ -112,7 +113,7 @@ public class ExampleMain {
 		if (true)
 			return;
 		
-        NSQLookup lookup = new NSQLookup();
+        NSQLookup lookup = new NSQLookupDynMapImpl();
         lookup.addAddr("localhost", 4161);
 		
 		start = new Date();

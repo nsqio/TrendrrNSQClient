@@ -5,6 +5,7 @@ package com.trendrr.nsq;
 
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -18,49 +19,26 @@ import com.trendrr.oss.DynMap;
 
 
 /**
+ * An interface to the nsq lookup.  We keep this as an interface because it depends on 
+ * some json parsing library and we dont want to force a dependancy on a specific lib. 
+ * 
+ * 
  * @author Dustin Norlander
  * @created Jan 14, 2013
  * 
  */
-public class NSQLookup {
-
-	protected static Log log = LogFactory.getLog(NSQLookup.class);
+public interface NSQLookup {
+	/**
+	 * add an address to a nsq lookup server.
+	 * @param addr
+	 * @param port
+	 */
+	public void addAddr(String addr, int port);
 	
-	Set<String> addresses = new HashSet<String> ();
-	AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-	
-	public NSQLookup() {
-		
-	}
-	
-	public void addAddr(String addr, int port) {
-		if (!addr.startsWith("http")) {
-			addr = "http://" + addr;
-		}
-		addr = addr + ":" + port;
-		this.addresses.add(addr);
-	}
-	
-	public DynMap lookup(String topic) {
-		return get("/lookup?topic=" + topic);
-	}
-	
-	protected DynMap get(String endpoint) {
-		for (String str: addresses) {
-			try {
-			    Future<Response> f = asyncHttpClient.prepareGet(str + endpoint).execute();
-			    Response r = f.get();
-			    //Return the first response we get.
-			    // is this correct? do we need to union results from all?
-			    return DynMap.instance(r.getResponseBody());
-			} catch (Exception x) {
-				log.error("Caught", x);
-			}
-		}
-		return null;
-	}
-	
-	public DynMap nodes() {
-		return this.get("/nodes");
-	}
+	/**
+	 * Lookup topic addresses
+	 * @param topic
+	 * @return
+	 */
+	public List<ConnectionAddress> lookup(String topic);
 }

@@ -118,6 +118,9 @@ public abstract class AbstractNSQClient {
         ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
         buf.writeBytes(MAGIC_PROTOCOL_VERSION);
         channel.write(buf);
+        
+        //TODO: indentify
+        
         return conn;
 	}
 	

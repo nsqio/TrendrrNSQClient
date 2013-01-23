@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -29,7 +30,7 @@ import com.trendrr.oss.Timeframe;
  * @created Jan 14, 2013
  * 
  */
-public class NSQConsumer extends NSQProducer {
+public class NSQConsumer extends AbstractNSQClient {
 
 	protected static Log log = LogFactory.getLog(NSQConsumer.class);
 	
@@ -40,48 +41,30 @@ public class NSQConsumer extends NSQProducer {
 	
     
 	public NSQConsumer(NSQLookup lookup, String topic, String channel, MessageCallback callback) {
-		super(1);
 		this.lookup = lookup;
 	    this.topic = topic;
 	    this.channel = channel;
 	    this.callback = callback;
 	}
 	
-	/**
-	 * 
-	 * Connects and subscribes to the requested topic and channel.
-	 * 
-	 * safe to call repeatedly for node discovery.
-	 */
-	protected synchronized void connect() {
-		if (this.bootstrap == null) {
-			//create default bootstrap
-			this.setNettyExecutors(Executors.newCachedThreadPool(),
-					Executors.newCachedThreadPool());
-		}
-		if (this.topic == null) {
-			log.warn("Subscribed topic is null, cant connect");
-			return;
-		}
-		DynMap mp = lookup.lookup(this.topic);
-		System.out.println(mp.toJSONString());
-		for (DynMap node : mp.getListOrEmpty(DynMap.class, "data.producers")) {
-			
-			String key = node.getString("address") + ":" + node.getInteger("tcp_port");
-			if (this.connections.containsKey(key)) {
-				//already connected to this one.
-				continue;
-			}
-			
-			Connection conn = this.createConnection(node.getString("address"), node.getInteger("tcp_port"));
-			conn.setCallback(callback);
-			/*
-			 * subscribe
-			 */
-			conn.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
-			conn.command(NSQCommand.instance("RDY " + conn.getMessagesPerBatch()));
-		}
+	@Override
+	protected Connection createConnection(String address, int port) {
+		Connection conn = super.createConnection(address, port);
 		
-		this.cleanupOldConnections();
+		conn.setCallback(callback);
+		/*
+		 * subscribe
+		 */
+		conn.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
+		conn.command(NSQCommand.instance("RDY " + conn.getMessagesPerBatch()));
+		return conn;
+		
+	}
+	/* (non-Javadoc)
+	 * @see com.trendrr.nsq.AbstractNSQClient#lookupAddresses()
+	 */
+	@Override
+	public List<ConnectionAddress> lookupAddresses() {
+		return lookup.lookup(topic);
 	}
 }
