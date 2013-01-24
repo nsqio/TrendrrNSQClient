@@ -1,6 +1,9 @@
 *.class
 
-build/
+build/classes
+build/jar
+build/build.num
+
 
 # Package Files #
 *.war
