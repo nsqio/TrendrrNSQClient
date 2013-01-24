@@ -8,7 +8,7 @@ Example usage:
 Consumer
 
 ```
-NSQLookup lookup = new NSQLookup();
+NSQLookup lookup = new NSQLookupDynMapImpl();
 lookup.addAddr("localhost", 4161);
 NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "dustin", new MessageCallback() {
             
@@ -35,9 +35,33 @@ consumer.start();
 Producer
 
 ```
-NSQProducer producer = new NSQProducer(50).addAddress("localhost", 4150);       
+NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);            
 producer.start();
 for (int i=0; i < 50000; i++) {
-    producer.produce("speedtest", ("this is a message" + i).getBytes("utf8"));
+    producer.produce("speedtest", ("this is a message" + i).getBytes());
 }
+```
+
+The producer also has a Batch collector that will collect messages until some threshold is reached (currently maxbytes or maxmessages) then send as a MPUB request.  This gives much greater throughput then producing messages one at a time.
+
+```
+producer.configureBatch("speedtest", 
+                new BatchCallback() {
+                    @Override
+                    public void batchSuccess(String topic, int num) {
+                    }
+                    @Override
+                    public void batchError(Exception ex, String topic, List<byte[]> messages) {
+                        ex.printStackTrace();   
+                    }
+                }, 
+            batchsize, 
+            null, //use default maxbytes 
+            null //use default max seconds
+        );
+
+producer.start();
+for (int i=0; i < iterations; i++) {
+    producer.produceBatch("speedtest", ("this is a message" + i).getBytes());
+
 ```
