@@ -3,8 +3,8 @@
  */
 package com.trendrr.nsq.frames;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -14,7 +14,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class NSQFrame {
 
-	protected static Log log = LogFactory.getLog(NSQFrame.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQFrame.class);
 	int size;
 	int frameId;
 	byte[] data;

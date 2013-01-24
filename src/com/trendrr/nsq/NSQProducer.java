@@ -4,13 +4,11 @@
 package com.trendrr.nsq;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendrr.nsq.exceptions.BadMessageException;
 import com.trendrr.nsq.exceptions.BadTopicException;
@@ -27,7 +25,7 @@ import com.trendrr.nsq.frames.ResponseFrame;
  */
 public class NSQProducer extends AbstractNSQClient {
 
-	protected static Log log = LogFactory.getLog(NSQProducer.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQProducer.class);
 
 	List<ConnectionAddress> addresses = new ArrayList<ConnectionAddress>();
 	

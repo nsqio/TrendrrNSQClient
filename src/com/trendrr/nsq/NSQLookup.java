@@ -4,18 +4,7 @@ package com.trendrr.nsq;
  */
 
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Future;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Response;
-import com.trendrr.oss.DynMap;
 
 
 /**

@@ -3,13 +3,13 @@ package com.trendrr.nsq.netty;
  * 
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendrr.nsq.NSQCommand;
 
@@ -22,7 +22,7 @@ import com.trendrr.nsq.NSQCommand;
  */
 public class NSQEncoder extends OneToOneEncoder {
 
-	protected static Log log = LogFactory.getLog(NSQEncoder.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQEncoder.class);
 
 	/* (non-Javadoc)
 	 * @see org.jboss.netty.handler.codec.oneone.OneToOneEncoder#encode(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.Channel, java.lang.Object)

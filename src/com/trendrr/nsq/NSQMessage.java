@@ -6,10 +6,8 @@ package com.trendrr.nsq;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.trendrr.oss.StringHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -19,7 +17,7 @@ import com.trendrr.oss.StringHelper;
  */
 public class NSQMessage {
 
-	protected static Log log = LogFactory.getLog(NSQMessage.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQMessage.class);
 	protected byte[] id;
 	protected int attempts;
 	protected Date timestamp;

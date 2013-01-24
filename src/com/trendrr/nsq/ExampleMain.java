@@ -5,28 +5,13 @@ package com.trendrr.nsq;
 
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-//import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.trendrr.nsq.exceptions.BadMessageException;
-import com.trendrr.nsq.exceptions.BadTopicException;
-import com.trendrr.nsq.exceptions.DisconnectedException;
 import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
 import com.trendrr.oss.StringHelper;
 
@@ -40,7 +25,7 @@ import com.trendrr.oss.StringHelper;
  */
 public class ExampleMain {
 
-	protected static Log log = LogFactory.getLog(ExampleMain.class);
+	protected static Logger log = LoggerFactory.getLogger(ExampleMain.class);
 	static AtomicInteger processed = new AtomicInteger(0);
 	static Date start;
 	/**

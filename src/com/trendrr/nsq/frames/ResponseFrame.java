@@ -5,8 +5,8 @@ package com.trendrr.nsq.frames;
 
 import java.io.UnsupportedEncodingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -16,7 +16,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ResponseFrame extends NSQFrame {
 
-	protected static Log log = LogFactory.getLog(ResponseFrame.class);
+	protected static Logger log = LoggerFactory.getLogger(ResponseFrame.class);
 	
 	public ResponseFrame() {
 		this.frameId = 0;

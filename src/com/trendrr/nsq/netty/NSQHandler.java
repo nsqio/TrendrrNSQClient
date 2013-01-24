@@ -3,13 +3,13 @@ package com.trendrr.nsq.netty;
  * 
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendrr.nsq.Connection;
 import com.trendrr.nsq.frames.NSQFrame;
@@ -23,7 +23,7 @@ import com.trendrr.nsq.frames.NSQFrame;
  */
 public class NSQHandler extends SimpleChannelUpstreamHandler {
 
-	protected static Log log = LogFactory.getLog(NSQHandler.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQHandler.class);
 	
 	@Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {

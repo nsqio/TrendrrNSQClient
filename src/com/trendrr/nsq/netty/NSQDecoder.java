@@ -3,16 +3,12 @@ package com.trendrr.nsq.netty;
  * 
  */
 
-import java.nio.channels.Channel;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
-import org.jboss.netty.handler.codec.replay.VoidEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.trendrr.nsq.frames.MessageFrame;
 import com.trendrr.nsq.frames.NSQFrame;
 
 
@@ -24,7 +20,7 @@ import com.trendrr.nsq.frames.NSQFrame;
  */
 public class NSQDecoder extends ReplayingDecoder<NSQDecoder.MyDecoderState>{
 
-	protected static Log log = LogFactory.getLog(NSQDecoder.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQDecoder.class);
 	
 	public static enum MyDecoderState {
 		READ_SIZE,

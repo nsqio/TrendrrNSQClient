@@ -4,7 +4,6 @@
 package com.trendrr.nsq.lookup;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -13,13 +12,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Response;
 import com.trendrr.nsq.ConnectionAddress;
 import com.trendrr.nsq.NSQLookup;
 import com.trendrr.oss.DynMap;
@@ -35,7 +31,7 @@ import com.trendrr.oss.DynMap;
  */
 public class NSQLookupDynMapImpl implements NSQLookup {
 
-	protected static Log log = LogFactory.getLog(NSQLookupDynMapImpl.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQLookupDynMapImpl.class);
 	
 	Set<String> addresses = new HashSet<String> ();
 	

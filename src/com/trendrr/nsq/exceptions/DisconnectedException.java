@@ -3,8 +3,8 @@
  */
 package com.trendrr.nsq.exceptions;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -14,7 +14,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DisconnectedException extends Exception {
 
-	protected static Log log = LogFactory.getLog(DisconnectedException.class);
+	protected static Logger log = LoggerFactory.getLogger(DisconnectedException.class);
 	
 	public DisconnectedException(String message, Throwable cause) {
 		super(message, cause);

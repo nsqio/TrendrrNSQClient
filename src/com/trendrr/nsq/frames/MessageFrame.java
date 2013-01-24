@@ -3,12 +3,10 @@
  */
 package com.trendrr.nsq.frames;
 
-import java.io.UnsupportedEncodingException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -18,7 +16,7 @@ import org.jboss.netty.buffer.ChannelBuffers;
  */
 public class MessageFrame extends NSQFrame {
 
-	protected static Log log = LogFactory.getLog(MessageFrame.class);
+	protected static Logger log = LoggerFactory.getLogger(MessageFrame.class);
 	
 	long timestamp;
 	int attempts;

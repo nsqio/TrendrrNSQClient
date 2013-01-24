@@ -4,11 +4,11 @@ package com.trendrr.nsq.netty;
  */
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -18,7 +18,7 @@ import org.jboss.netty.channel.Channels;
  */
 public class NSQPipeline implements ChannelPipelineFactory {
 
-	protected static Log log = LogFactory.getLog(NSQPipeline.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQPipeline.class);
 	
 	public ChannelPipeline getPipeline() throws Exception {
         // Create a default pipeline implementation.

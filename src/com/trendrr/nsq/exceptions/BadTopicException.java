@@ -3,8 +3,8 @@
  */
 package com.trendrr.nsq.exceptions;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -14,7 +14,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class BadTopicException extends Exception {
 
-	protected static Log log = LogFactory.getLog(BadTopicException.class);
+	protected static Logger log = LoggerFactory.getLogger(BadTopicException.class);
 	
 	public BadTopicException(String message) {
 		super(message);

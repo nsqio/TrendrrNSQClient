@@ -6,8 +6,8 @@ package com.trendrr.nsq;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -17,7 +17,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NSQCommand {
 
-	protected static Log log = LogFactory.getLog(NSQCommand.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQCommand.class);
 
 	public static NSQCommand instance(String line) {
 		NSQCommand n = new NSQCommand();

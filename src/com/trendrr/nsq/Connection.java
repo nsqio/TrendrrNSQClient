@@ -5,21 +5,19 @@ package com.trendrr.nsq;
  */
 
 import java.util.Date;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendrr.nsq.exceptions.DisconnectedException;
 import com.trendrr.nsq.frames.ErrorFrame;
 import com.trendrr.nsq.frames.MessageFrame;
 import com.trendrr.nsq.frames.NSQFrame;
 import com.trendrr.nsq.frames.ResponseFrame;
-import com.trendrr.oss.exceptions.TrendrrDisconnectedException;
 
 
 
@@ -31,7 +29,7 @@ import com.trendrr.oss.exceptions.TrendrrDisconnectedException;
  */
 public class Connection {
 
-	protected static Log log = LogFactory.getLog(Connection.class);
+	protected static Logger log = LoggerFactory.getLogger(Connection.class);
 	
 	Channel channel;
 	int heartbeats = 0;

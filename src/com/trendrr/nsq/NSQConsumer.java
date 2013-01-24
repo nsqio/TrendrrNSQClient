@@ -3,25 +3,10 @@ package com.trendrr.nsq;
  * 
  */
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-
-import com.trendrr.oss.DynMap;
-import com.trendrr.oss.Timeframe;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -32,7 +17,7 @@ import com.trendrr.oss.Timeframe;
  */
 public class NSQConsumer extends AbstractNSQClient {
 
-	protected static Log log = LogFactory.getLog(NSQConsumer.class);
+	protected static Logger log = LoggerFactory.getLogger(NSQConsumer.class);
 	
 	NSQLookup lookup;
 	String topic = null;

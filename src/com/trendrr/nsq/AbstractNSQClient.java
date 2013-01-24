@@ -6,7 +6,6 @@ package com.trendrr.nsq;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
@@ -14,17 +13,16 @@ import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendrr.nsq.netty.NSQPipeline;
-import com.trendrr.oss.Timeframe;
 
 
 /**
@@ -36,7 +34,7 @@ import com.trendrr.oss.Timeframe;
  */
 public abstract class AbstractNSQClient {
 
-	protected static Log log = LogFactory.getLog(AbstractNSQClient.class);
+	protected static Logger log = LoggerFactory.getLogger(AbstractNSQClient.class);
 	
 	
 	/**

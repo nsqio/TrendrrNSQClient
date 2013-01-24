@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -21,7 +21,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class Connections {
 
-	protected static Log log = LogFactory.getLog(Connections.class);
+	protected static Logger log = LoggerFactory.getLogger(Connections.class);
 	
 	protected HashMap<String, List<Connection>> connections = new HashMap<String, List<Connection>>();
 	protected List<Connection> connectionList = new ArrayList<Connection>();

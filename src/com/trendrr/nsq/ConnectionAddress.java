@@ -3,8 +3,8 @@
  */
 package com.trendrr.nsq;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -14,7 +14,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ConnectionAddress {
 
-	protected static Log log = LogFactory.getLog(ConnectionAddress.class);
+	protected static Logger log = LoggerFactory.getLogger(ConnectionAddress.class);
 	
 	private int poolsize = 1;
 	

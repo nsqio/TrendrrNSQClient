@@ -7,8 +7,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendrr.nsq.BatchCallback;
 import com.trendrr.nsq.MessageCallback;
@@ -17,7 +17,6 @@ import com.trendrr.nsq.NSQLookup;
 import com.trendrr.nsq.NSQMessage;
 import com.trendrr.nsq.NSQProducer;
 import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
-import com.trendrr.oss.StringHelper;
 
 
 /**
@@ -27,7 +26,7 @@ import com.trendrr.oss.StringHelper;
  */
 public class SpeedTest {
 
-	protected static Log log = LogFactory.getLog(SpeedTest.class);
+	protected static Logger log = LoggerFactory.getLogger(SpeedTest.class);
 	static String address;
 	static int port;
 	
