@@ -54,9 +54,10 @@ public class NSQLookupDynMapImpl implements NSQLookup {
 		for (String addr : this.addresses) {
 			DynMap mp = DynMap.instance(this.getHTML(addr + "/lookup?topic=" + topic), new DynMap());
 			for (DynMap node : mp.getListOrEmpty(DynMap.class, "data.producers")) {		
-				String key = node.getString("address") + ":" + node.getInteger("tcp_port");
+				String host = node.getString("broadcast_address", node.getString("address"));
+				String key =  host + ":" + node.getInteger("tcp_port");
 				ConnectionAddress address = new ConnectionAddress();
-				address.setHost(node.getString("address"));
+				address.setHost(host);
 				address.setPort(node.getInteger("tcp_port"));
 				addresses.put(key, address);
 			}

@@ -84,7 +84,6 @@ public class Connection {
 	
 	
 	public void incoming(NSQFrame frame) {
-		System.out.println("INCOMING: "+ frame);
 		if (frame instanceof ResponseFrame) {
 			if ("_heartbeat_".equals(((ResponseFrame) frame).getMessage())) {
 				this.heartbeat();

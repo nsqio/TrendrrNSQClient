@@ -35,11 +35,17 @@ public class NSQProducer extends AbstractNSQClient {
 	
 	ConcurrentHashMap<String, Batch> batches = new ConcurrentHashMap<String, Batch>();
 	
-	public void configureBatch(String topic, BatchCallback callback, int maxMessages, long maxBytes, int maxSeconds) {
+	public void configureBatch(String topic, BatchCallback callback, Integer maxMessages, Long maxBytes, Integer maxSeconds) {
 		Batch batch = new Batch(topic, callback);
-		batch.setMaxBytes(maxBytes);
-		batch.setMaxMessages(maxMessages);
-		batch.setMaxSeconds(maxSeconds);
+		if (maxBytes != null) {
+			batch.setMaxBytes(maxBytes);
+		}
+		if (maxMessages != null) {
+			batch.setMaxMessages(maxMessages);
+		}
+		if (maxSeconds != null) {
+			batch.setMaxSeconds(maxSeconds);
+		}
 		Batch old = this.batches.put(topic, batch);
 		if (old != null) 
 			this.sendBatch(old, old.getAndClear());

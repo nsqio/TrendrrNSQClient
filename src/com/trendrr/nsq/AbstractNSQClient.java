@@ -3,7 +3,9 @@
  */
 package com.trendrr.nsq;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -120,6 +122,23 @@ public abstract class AbstractNSQClient {
         channel.write(buf);
         
         //TODO: indentify
+		try {
+			String identJson = "{" +
+					"\"short_id\":\"" + InetAddress.getLocalHost().getHostName() + "\"" +
+					"," +
+					"\"long_id\":\"" + InetAddress.getLocalHost().getCanonicalHostName() + "\"" +
+					"}";
+			System.out.println(identJson);
+			NSQCommand ident = NSQCommand.instance("IDENTIFY", identJson.getBytes());
+			conn.command(ident);
+			
+		} catch (UnknownHostException e) {
+			log.error("Caught", e);
+		}
+        		
+        		
+       
+        
         
         return conn;
 	}
@@ -171,5 +190,10 @@ public abstract class AbstractNSQClient {
 	 */
 	public synchronized void _disconnected(Connection connection) {
 		this.connections.remove(connection);
+	}
+	
+	public void close() {
+		this.connections.close();
+		this.bootstrap.releaseExternalResources();
 	}
 }

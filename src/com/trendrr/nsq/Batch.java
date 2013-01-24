@@ -25,7 +25,7 @@ public class Batch {
 
 	protected static Log log = LogFactory.getLog(Batch.class);
 	
-	protected long maxBytes = 1048576l;// default to 1 megabyte
+	protected long maxBytes = 1024768l - 50000;// 1024768 is the default nsqd message max.  subtract 50k so we dont accidentally go over the limit.
 	protected int maxMessages = 500;	
 	protected long maxSeconds = 30;
 	protected String topic;
@@ -125,6 +125,4 @@ public class Batch {
 	public synchronized void setTopic(String topic) {
 		this.topic = topic;
 	}
-	
-	
 }

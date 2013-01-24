@@ -109,6 +109,13 @@ public class Connections {
 		this.connectionList.removeAll(conns);		
 	}
 	
+	public synchronized void close() {
+		for (Connection c: this.getConnections()) {
+			c.close();
+		}
+		this.connections.clear();
+		this.connectionList.clear();
+	}
 	
 	public String getKey(String host, int port) {
 		return host + ":" + port;
