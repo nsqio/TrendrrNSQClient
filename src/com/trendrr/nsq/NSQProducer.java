@@ -52,6 +52,18 @@ public class NSQProducer extends AbstractNSQClient {
 	}
 	
 	/**
+	 * flushes all batches
+	 */
+	public void flushBatches() {
+		for (String k : batches.keySet()) {
+			Batch b = batches.remove(k);
+			if (b == null)
+				continue;
+			this.sendBatch(b, b.getAndClear());
+		}
+	}
+	
+	/**
 	 * sends the batch, sending result to callback
 	 * @param batch
 	 */
@@ -185,6 +197,12 @@ public class NSQProducer extends AbstractNSQClient {
 		addr.setPort(port);
 		this.addresses.add(addr);
 		return this;
+	}
+	
+	@Override
+	public void close() {
+		this.flushBatches();
+		super.close();
 	}
 	
 	/* (non-Javadoc)
