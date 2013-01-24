@@ -5,12 +5,18 @@
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.trendrr.nsq.BatchCallback;
+import com.trendrr.nsq.MessageCallback;
+import com.trendrr.nsq.NSQConsumer;
+import com.trendrr.nsq.NSQLookup;
+import com.trendrr.nsq.NSQMessage;
 import com.trendrr.nsq.NSQProducer;
+import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
 import com.trendrr.oss.StringHelper;
 
 
@@ -40,14 +46,66 @@ public class SpeedTest {
 			}
 		}
 		
-		testBatch();
+		testProduceBatch();
+//		testConsume();
+	}
+	
+	public static void testConsume() {
+		final int iterations = 100000;
+		final Date start = new Date();
+		final AtomicInteger processed = new AtomicInteger(0);
+		
+		NSQLookup lookup = new NSQLookupDynMapImpl();
+        lookup.addAddr("localhost", 4161);
+		
+
+		/**
+		 * Consumer
+		 */
+		NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "testconsumer", new MessageCallback() {
+			
+			@Override
+			public void message(NSQMessage message) {
+				try {
+					
+					//now mark the message as finished.
+					message.finished();
+					
+					//or you could requeue it, which indicates a failure and puts it back on the queue.
+//					message.requeue();
+
+					int p = processed.incrementAndGet();
+					if (p % 1000 == 0) {
+						System.out.println("consumer: " + p);
+					}
+					if (p == iterations) {
+						System.out.println("completed " + iterations + " in " + (new Date().getTime()-start.getTime()));
+					}
+					
+				} catch (Exception e) {
+					log.error("Caught", e);
+				}
+			}
+			
+			@Override
+			public void error(Exception x) {
+				log.warn("Caught", x);
+			}
+		});
+		
+		System.out.println("Starting consumer");
+		consumer.start();
+		
+		//TODO: have a wait latch 
 		
 	}
 	
-	public static void testBatch() {
+	public static void testProduceBatch() {
 		int iterations = 100000;
 		int batchsize = 100;
 		int poolsize = 1;
+		int messageSize = 10000; //number of bytes for a message.
+		
 		/*
 		 * PRODUCER.  produce 50k messages
 		 */
@@ -71,14 +129,20 @@ public class SpeedTest {
 		
 		producer.start();
 		Date start = new Date();
-		String msg = StringHelper.randomString(100);
+		
+		StringBuilder str = new StringBuilder();
+		for (int i=0; i < messageSize; i++) {
+			str.append("a");
+		}
+		
+		byte[] msg = str.toString().getBytes();
 		
 
 		for (int i=0; i < iterations; i++) {
 			if (i % 1000 == 0) {
 				System.out.println("produced: " + i);
 			}
-			producer.produceBatch("speedtest", (msg + i).getBytes());
+			producer.produceBatch("speedtest", msg);
 		}
 		
 //		My System does this in about 10 seconds, so 5k messages per second on a single connection
