@@ -28,6 +28,10 @@ public class Connections {
 	protected long rrCount = 0;
 	
 	public synchronized void addConnection(Connection connection) {
+		if (connection == null) {
+			return;
+		}
+		
 		String key = connection.getHost() + ":" + connection.getPort();
 		if (connectionList.contains(connection)) {
 			log.warn("Already contains connection:" + connection);
