@@ -34,6 +34,12 @@ public class NSQProducer extends AbstractNSQClient {
 	
 	ConcurrentHashMap<String, Batch> batches = new ConcurrentHashMap<String, Batch>();
 	
+	/**
+	 * If no connections are available, will try this many times with 5 second pause between, before throwing a
+	 * no connections available exception.
+	 */
+	int connectionRetries = 5;
+	
 	public void configureBatch(String topic, BatchCallback callback, Integer maxMessages, Long maxBytes, Integer maxSeconds) {
 		Batch batch = new Batch(topic, callback);
 		if (maxBytes != null) {
@@ -109,6 +115,26 @@ public class NSQProducer extends AbstractNSQClient {
 		}
 	}
 	
+	
+	protected synchronized Connection getConn() throws NoConnectionsException {
+		NoConnectionsException ex = new NoConnectionsException("no connections", null);
+		for (int i=0; i < this.connectionRetries; i++) {
+			try {
+				return this.connections.next();
+			} catch (NoConnectionsException x) {
+				ex = x;
+				try {
+					Thread.sleep(5*1000);
+				} catch (InterruptedException e) {}
+				//try to reconnect..
+				log.warn("Attempting to reconnect");
+				this.connect();
+			}
+		}
+		log.warn("Could not get a new connection within " + (this.connectionRetries*5) + " seconds. giving up..");
+		throw ex;
+	}
+	
 	/**
 	 * produce multiple messages.
 	 * @param topic
@@ -129,7 +155,7 @@ public class NSQProducer extends AbstractNSQClient {
 			return;
 		}
 		
-		Connection c = this.connections.next();
+		Connection c = this.getConn();
 		
 		NSQCommand command = NSQCommand.instance("MPUB " + topic);
 		command.setData(message);
@@ -137,7 +163,7 @@ public class NSQProducer extends AbstractNSQClient {
 		
 		NSQFrame frame = c.commandAndWait(command);
 		if (frame instanceof ResponseFrame) {
-			c._setLastHeartbeat(); //remove once server heartbeats in place.
+			c._setLastHeartbeat(); //TODO: remove once producer server heartbeats in place.
 			return;
 		}
 		if (frame instanceof ErrorFrame) {
@@ -161,12 +187,12 @@ public class NSQProducer extends AbstractNSQClient {
 	 * @throws NoConnectionsException 
 	 */
 	public void produce(String topic, byte[] message) throws DisconnectedException, BadTopicException, BadMessageException, NoConnectionsException{
-		Connection c = this.connections.next();
+		Connection c = this.getConn();
 		
 		NSQCommand command = NSQCommand.instance("PUB " + topic, message);
 		NSQFrame frame = c.commandAndWait(command);
 		if (frame instanceof ResponseFrame) {
-			c._setLastHeartbeat(); //remove once server heartbeats in place.
+			c._setLastHeartbeat(); //TODO: remove once server heartbeats in place.
 			return;
 		}
 		if (frame instanceof ErrorFrame) {

@@ -120,7 +120,7 @@ public abstract class AbstractNSQClient {
         buf.writeBytes(MAGIC_PROTOCOL_VERSION);
         channel.write(buf);
         
-        //TODO: indentify
+        //indentify
 		try {
 			String identJson = "{" +
 					"\"short_id\":\"" + InetAddress.getLocalHost().getHostName() + "\"" +
