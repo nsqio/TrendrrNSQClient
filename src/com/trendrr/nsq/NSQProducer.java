@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.trendrr.nsq.exceptions.BadMessageException;
 import com.trendrr.nsq.exceptions.BadTopicException;
 import com.trendrr.nsq.exceptions.DisconnectedException;
+import com.trendrr.nsq.exceptions.NoConnectionsException;
 import com.trendrr.nsq.frames.ErrorFrame;
 import com.trendrr.nsq.frames.NSQFrame;
 import com.trendrr.nsq.frames.ResponseFrame;
@@ -115,8 +116,9 @@ public class NSQProducer extends AbstractNSQClient {
 	 * @throws DisconnectedException
 	 * @throws BadTopicException
 	 * @throws BadMessageException
+	 * @throws NoConnectionsException 
 	 */
-	public void produceMulti(String topic, List<byte[]> message) throws DisconnectedException, BadTopicException, BadMessageException{
+	public void produceMulti(String topic, List<byte[]> message) throws DisconnectedException, BadTopicException, BadMessageException, NoConnectionsException{
 		if (message == null || message.isEmpty()) {
 			return;
 		}
@@ -156,8 +158,9 @@ public class NSQProducer extends AbstractNSQClient {
 	/**
 	 * @param topic
 	 * @param message
+	 * @throws NoConnectionsException 
 	 */
-	public void produce(String topic, byte[] message) throws DisconnectedException, BadTopicException, BadMessageException{
+	public void produce(String topic, byte[] message) throws DisconnectedException, BadTopicException, BadMessageException, NoConnectionsException{
 		Connection c = this.connections.next();
 		
 		NSQCommand command = NSQCommand.instance("PUB " + topic, message);

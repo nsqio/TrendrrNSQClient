@@ -22,6 +22,7 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.trendrr.nsq.exceptions.NoConnectionsException;
 import com.trendrr.nsq.netty.NSQPipeline;
 
 
@@ -173,12 +174,16 @@ public abstract class AbstractNSQClient {
 	 */
 	public synchronized void cleanupOldConnections() {
 		Date cutoff = new Date(new Date().getTime() - (1000*60*2));
-		for (Connection c : this.connections.getConnections()) {
-			if (cutoff.after(c.getLastHeartbeat())) {
-				log.warn("Removing dead connection: " + c.getHost() + ":" + c.getPort());
-				c.close();
-				connections.remove(c);
+		try {
+			for (Connection c : this.connections.getConnections()) {
+				if (cutoff.after(c.getLastHeartbeat())) {
+					log.warn("Removing dead connection: " + c.getHost() + ":" + c.getPort());
+					c.close();
+					connections.remove(c);
+				}
 			}
+		} catch (NoConnectionsException e) {
+			//ignore
 		}
 	}
 	

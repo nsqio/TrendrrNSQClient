@@ -3,9 +3,6 @@
  */
 package com.trendrr.nsq.exceptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 /**
  * @author Dustin Norlander
@@ -14,7 +11,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DisconnectedException extends Exception {
 
-	protected static Logger log = LoggerFactory.getLogger(DisconnectedException.class);
+	private static final long serialVersionUID = 6014743379707601555L;
 	
 	public DisconnectedException(String message, Throwable cause) {
 		super(message, cause);

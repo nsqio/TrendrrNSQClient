@@ -3,8 +3,6 @@
  */
 package com.trendrr.nsq.exceptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -14,7 +12,7 @@ import org.slf4j.LoggerFactory;
  */
 public class BadTopicException extends Exception {
 
-	protected static Logger log = LoggerFactory.getLogger(BadTopicException.class);
+	private static final long serialVersionUID = 5128064038299401754L;
 	
 	public BadTopicException(String message) {
 		super(message);

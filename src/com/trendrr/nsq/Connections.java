@@ -10,6 +10,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.trendrr.nsq.exceptions.NoConnectionsException;
+
 
 /**
  * Wraps a series of connections.  
@@ -71,7 +73,7 @@ public class Connections {
 	 * 
 	 * @return
 	 */
-	public synchronized List<Connection> getConnections() {
+	public synchronized List<Connection> getConnections() throws NoConnectionsException {
 		//return a copy of the internal list so we dont have any
 		//concurrent modification problems.
 		return new ArrayList<Connection>(this.connectionList);
@@ -80,7 +82,7 @@ public class Connections {
 	 * round robin returns the next connection
 	 * @return
 	 */
-	public synchronized Connection next() {
+	public synchronized Connection next() throws NoConnectionsException {
 		if (connectionList.size() == 0) {
 			log.warn("No connections available!");
 			return null;
@@ -114,8 +116,12 @@ public class Connections {
 	}
 	
 	public synchronized void close() {
-		for (Connection c: this.getConnections()) {
-			c.close();
+		try {
+			for (Connection c: this.getConnections()) {
+				c.close();
+			}
+		} catch (NoConnectionsException e) {
+//			log.error("Caught", e);
 		}
 		this.connections.clear();
 		this.connectionList.clear();
