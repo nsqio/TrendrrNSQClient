@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.trendrr.nsq.BatchCallback;
-import com.trendrr.nsq.MessageCallback;
+import com.trendrr.nsq.NSQMessageCallback;
 import com.trendrr.nsq.NSQConsumer;
 import com.trendrr.nsq.NSQLookup;
 import com.trendrr.nsq.NSQMessage;
@@ -61,7 +61,7 @@ public class SpeedTest {
 		/**
 		 * Consumer
 		 */
-		NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "testconsumer", new MessageCallback() {
+		NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "testconsumer", new NSQMessageCallback() {
 			
 			@Override
 			public void message(NSQMessage message) {

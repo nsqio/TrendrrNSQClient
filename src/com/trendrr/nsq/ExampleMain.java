@@ -105,7 +105,7 @@ public class ExampleMain {
 		/**
 		 * Consumer.  consume 50k messages and immediately exit
 		 */
-		NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "dustin", new MessageCallback() {
+		NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "dustin", new NSQMessageCallback() {
 			
 			@Override
 			public void message(NSQMessage message) {

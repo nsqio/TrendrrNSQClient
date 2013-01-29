@@ -35,7 +35,7 @@ public class Connection {
 	int heartbeats = 0;
 	Date lastHeartbeat = new Date();
 	
-	MessageCallback callback = null;
+	NSQMessageCallback callback = null;
 	int totalMessages = 0;
 	int messagesPerBatch = 200;
 	
@@ -156,12 +156,12 @@ public class Connection {
 		return totalMessages;
 	}
 
-	public MessageCallback getCallback() {
+	public NSQMessageCallback getCallback() {
 		return callback;
 	}
 
 
-	public void setCallback(MessageCallback callback) {
+	public void setCallback(NSQMessageCallback callback) {
 		this.callback = callback;
 	}
 

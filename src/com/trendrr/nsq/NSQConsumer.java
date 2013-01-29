@@ -22,10 +22,10 @@ public class NSQConsumer extends AbstractNSQClient {
 	NSQLookup lookup;
 	String topic = null;
 	String channel = null;
-	MessageCallback callback;
+	NSQMessageCallback callback;
 	
     
-	public NSQConsumer(NSQLookup lookup, String topic, String channel, MessageCallback callback) {
+	public NSQConsumer(NSQLookup lookup, String topic, String channel, NSQMessageCallback callback) {
 		this.lookup = lookup;
 	    this.topic = topic;
 	    this.channel = channel;
