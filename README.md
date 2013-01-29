@@ -1,7 +1,7 @@
 JavaNSQCLient
 =============
 
-A fast netty based java client for nsq
+A fast netty based java client for nsq.
 
 Example usage:
 
@@ -10,7 +10,7 @@ Consumer
 ```
 NSQLookup lookup = new NSQLookupDynMapImpl();
 lookup.addAddr("localhost", 4161);
-NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "dustin", new MessageCallback() {
+NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "dustin", new NSQMessageCallback() {
             
     @Override
     public void message(NSQMessage message) {
@@ -63,5 +63,5 @@ producer.configureBatch("speedtest",
 producer.start();
 for (int i=0; i < iterations; i++) {
     producer.produceBatch("speedtest", ("this is a message" + i).getBytes());
-
+}
 ```
