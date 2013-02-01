@@ -80,7 +80,8 @@ public class NSQLookupDynMapImpl implements NSQLookup {
 	    	  log.error("Caught", e);
 	      } finally {
 	    	  try {
-				rd.close();
+	    		  if (rd != null)
+	    			  rd.close();
 			} catch (Exception e) {
 				log.error("Caught", e);
 			}
