@@ -55,4 +55,7 @@ public class NSQCommand {
 		this.data = data;
 	}
 	
+	public String toString() {
+		return super.toString() + " (" + this.getLine().trim() + ")";
+	}
 }
