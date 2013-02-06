@@ -42,6 +42,7 @@ public class NSQHandler extends SimpleChannelUpstreamHandler {
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
     	Connection con = (Connection)e.getChannel().getAttachment();
 		if (con != null) {
+			log.warn("Channel disconnected! " + con);
 			con._disconnected();
 		} else {
 			log.warn("No connection set for : " + e.getChannel());
