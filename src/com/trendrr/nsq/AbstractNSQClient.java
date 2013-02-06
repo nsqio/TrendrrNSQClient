@@ -115,6 +115,7 @@ public abstract class AbstractNSQClient {
             log.error("Caught", future.getCause());
             return null;
         }
+        log.warn("Creating connection: " + address + " : " + port);
         Connection conn = new Connection(address, port, channel, this);
         ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
         buf.writeBytes(MAGIC_PROTOCOL_VERSION);
@@ -127,7 +128,6 @@ public abstract class AbstractNSQClient {
 					"," +
 					"\"long_id\":\"" + InetAddress.getLocalHost().getCanonicalHostName() + "\"" +
 					"}";
-			System.out.println(identJson);
 			NSQCommand ident = NSQCommand.instance("IDENTIFY", identJson.getBytes());
 			conn.command(ident);
 			
@@ -192,6 +192,7 @@ public abstract class AbstractNSQClient {
 	 * @param connection
 	 */
 	public synchronized void _disconnected(Connection connection) {
+		log.warn("Disconnected!" + connection);
 		this.connections.remove(connection);
 	}
 	
