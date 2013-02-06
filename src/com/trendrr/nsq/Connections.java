@@ -85,7 +85,7 @@ public class Connections {
 	public synchronized Connection next() throws NoConnectionsException {
 		if (connectionList.size() == 0) {
 			log.warn("No connections available!");
-			return null;
+			throw new NoConnectionsException("No connections available", null);
 		}
 		
 		return connectionList.get((int)(rrCount++ % connectionList.size()));
