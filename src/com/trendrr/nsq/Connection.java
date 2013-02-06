@@ -7,6 +7,7 @@ package com.trendrr.nsq;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -36,7 +37,7 @@ public class Connection {
 	Date lastHeartbeat = new Date();
 	
 	NSQMessageCallback callback = null;
-	int totalMessages = 0;
+	AtomicLong totalMessages = new AtomicLong(0l);
 	int messagesPerBatch = 200;
 	
 	AbstractNSQClient client = null;
@@ -87,7 +88,15 @@ public class Connection {
 				this.heartbeat();
 				return;
 			} else {
-				this.responses.add(frame);
+				if (!this.requests.isEmpty()) {
+					try {
+						this.responses.offer(frame, 20, TimeUnit.SECONDS);
+					} catch (InterruptedException e) {
+						log.error("Caught", e);
+						//TODO: what to do here? we should probably disconnect!  
+						this.close();
+					}
+				}
 				return;
 			}
 		}
@@ -96,8 +105,8 @@ public class Connection {
 			return;
 		}
 		if (frame instanceof MessageFrame) {
-			this.totalMessages++;
-			if (totalMessages % messagesPerBatch > (messagesPerBatch/2)) {
+			long tot = this.totalMessages.incrementAndGet();
+			if (tot % messagesPerBatch > (messagesPerBatch/2)) {
 				//request some more!
 				this.command(NSQCommand.instance("RDY " + this.messagesPerBatch));
 			}
@@ -152,8 +161,8 @@ public class Connection {
 		return lastHeartbeat;
 	}
 
-	public int getTotalMessages() {
-		return totalMessages;
+	public long getTotalMessages() {
+		return totalMessages.get();
 	}
 
 	public NSQMessageCallback getCallback() {
@@ -172,6 +181,7 @@ public class Connection {
 		} catch (Exception x) {
 			log.error("Caught", x);
 		}
+		log.warn("Close called on connection: " + this);
 		this._disconnected();
 	}
 	
@@ -183,14 +193,16 @@ public class Connection {
 	 * @throws Exception
 	 */
 	public NSQFrame commandAndWait(NSQCommand command) throws DisconnectedException{	
-		
+	    
 		try {
 			try {
+
 				if (!this.requests.offer(command, 5, TimeUnit.SECONDS)) {
 					//throw timeout, and disconnect?
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
 				
+				this.responses.clear(); //clear the response queue if needed.
 				ChannelFuture fut = this.command(command);
 				
 				if (!fut.await(5, TimeUnit.SECONDS)) {
@@ -226,5 +238,9 @@ public class Connection {
 	 */
 	public ChannelFuture command(NSQCommand command) {
 		return this.channel.write(command);
+	}
+	
+	public String toString() {
+		return "NSQCONNECTION : " + super.toString() + " " + this.host + " : " + this.port;
 	}
 }
