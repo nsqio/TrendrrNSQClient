@@ -57,6 +57,14 @@ public class Connection {
 		this.port = port;
 	}
 	
+	/**
+	 * gets the owner of this connection (either a NSQProducer or NSQConsumer)
+	 * @return
+	 */
+	public AbstractNSQClient getParent() {
+		return this.client;
+	}
+	
 	public boolean isRequestInProgress() {
 		return this.requests.size() > 0;
 	}
