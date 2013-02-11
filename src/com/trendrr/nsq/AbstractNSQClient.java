@@ -11,7 +11,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -19,6 +22,7 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +54,8 @@ public abstract class AbstractNSQClient {
     protected ClientBootstrap bootstrap = null;
     protected Timer timer = null;
     
+    //this executor is where the callback code is handled
+    protected Executor executor = Executors.newSingleThreadExecutor();
 	
     /**
 	 * connects, ready to produce.
@@ -76,6 +82,17 @@ public abstract class AbstractNSQClient {
 	 */
 	public abstract List<ConnectionAddress> lookupAddresses();
 	
+	/**
+	 * this is the executor where the callbacks happen.  default is a new cached threadpool.
+	 * @param executor
+	 */
+	public synchronized void setExecutor(Executor executor) {
+		this.executor = executor;
+	}
+	
+	public Executor getExecutor() {
+		return this.executor;	
+	}
 	
 	/**
 	 * use this if you want to specify your own netty executors. by default will use
@@ -197,7 +214,9 @@ public abstract class AbstractNSQClient {
 	}
 	
 	public void close() {
+		this.timer.cancel();
 		this.connections.close();
 		this.bootstrap.releaseExternalResources();
+		
 	}
 }
