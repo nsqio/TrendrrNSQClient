@@ -27,11 +27,15 @@ public class NSQHandler extends SimpleChannelUpstreamHandler {
 	
 	@Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-		NSQFrame frame = (NSQFrame)e.getMessage();
-		
-		Connection con = (Connection)e.getChannel().getAttachment();
+		final NSQFrame frame = (NSQFrame)e.getMessage();
+		final Connection con = (Connection)e.getChannel().getAttachment();
 		if (con != null) {
-			con.incoming(frame);
+			con.getParent().getExecutor().execute(new Runnable() {
+				@Override
+				public void run() {
+					con.incoming(frame);
+				}
+			});
 		} else {
 			log.warn("No connection set for : " + e.getChannel());
 			//TODO: should we kill the channel?
