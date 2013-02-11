@@ -1,7 +1,7 @@
-JavaNSQCLient
+TrendrrNSQCLient
 =============
 
-A fast netty based java client for nsq.
+A fast netty based java client for [nsq][nsq].
 
 Example usage:
 
@@ -65,3 +65,8 @@ for (int i=0; i < iterations; i++) {
     producer.produceBatch("speedtest", ("this is a message" + i).getBytes());
 }
 ```
+
+
+
+
+[nsq]: https://github.com/bitly/nsq
