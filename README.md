@@ -1,11 +1,13 @@
-TrendrrNSQCLient
+## TrendrrNSQCLient
 =============
 
-A fast netty based java client for [nsq][nsq].
+A fast netty based java client for [nsq][nsq].  We developed this client to use in various places in the trendrr.tv stack.
+It is currently deployed in production.  It produces and consumes upwards of a billion messages per day. 
+
+
+## Consumer
 
 Example usage:
-
-Consumer
 
 ```
 NSQLookup lookup = new NSQLookupDynMapImpl();
@@ -32,7 +34,9 @@ consumer.start();
 ```
 
 
-Producer
+## Producer
+
+Example usage: 
 
 ```
 NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);            
@@ -67,6 +71,16 @@ for (int i=0; i < iterations; i++) {
 ```
 
 
+## Dependancies
+
+* [netty][netty]
+* [slf4j][slf4j]
+* [trendrr-oss][trendrr-oss]
+
+Note: the trendrr-oss dependancy can easily be swapped out by implementing the com.trendrr.nsq.NSQLookup interface using a different json parser
 
 
 [nsq]: https://github.com/bitly/nsq
+[netty]: http://netty.io/
+[slf4j]: http://www.slf4j.org/
+[trendrr-oss]: https://github.com/trendrr/java-oss-lib
