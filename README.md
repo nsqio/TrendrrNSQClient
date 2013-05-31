@@ -1,8 +1,8 @@
 ## TrendrrNSQCLient
 =============
 
-A fast netty based java client for [nsq][nsq].  We developed this client to use in various places in the trendrr.tv stack.
-It is currently deployed in production.  It produces and consumes upwards of a billion messages per day. 
+A fast netty based java client for [nsq][nsq].  We developed this client to use in various places in the trendrr.tv and curatorr.com stacks.
+It is currently deployed in production.  It produces and consumes billions of messages per day. 
 
 
 ## Consumer
