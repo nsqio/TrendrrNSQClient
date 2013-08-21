@@ -1,7 +1,7 @@
 package com.trendrr.nsq;
 
 /**
- * 
+ *
  */
 
 import java.util.Date;
@@ -26,29 +26,29 @@ import com.trendrr.nsq.frames.ResponseFrame;
 /**
  * @author Dustin Norlander
  * @created Jan 14, 2013
- * 
+ *
  */
 public class Connection {
 
 	protected static Logger log = LoggerFactory.getLogger(Connection.class);
-	
+
 	Channel channel;
 	int heartbeats = 0;
 	Date lastHeartbeat = new Date();
-	
+
 	NSQMessageCallback callback = null;
 	AtomicLong totalMessages = new AtomicLong(0l);
 	int messagesPerBatch = 200;
-	
+
 	AbstractNSQClient client = null;
-	
+
 	String host = null;
 	int port;
-	
+
 	LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<NSQCommand>(1);
 	LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<NSQFrame>(1);
-	
-	
+
+
 	public Connection(String host, int port, Channel channel, AbstractNSQClient client) {
 		this.channel = channel;
 		this.channel.setAttachment(this);
@@ -56,7 +56,7 @@ public class Connection {
 		this.host = host;
 		this.port = port;
 	}
-	
+
 	/**
 	 * gets the owner of this connection (either a NSQProducer or NSQConsumer)
 	 * @return
@@ -64,11 +64,11 @@ public class Connection {
 	public AbstractNSQClient getParent() {
 		return this.client;
 	}
-	
+
 	public boolean isRequestInProgress() {
 		return this.requests.size() > 0;
 	}
-	
+
 	public String getHost() {
 		return host;
 	}
@@ -87,9 +87,9 @@ public class Connection {
 	}
 
 
-	
-	
-	
+
+
+
 	public void incoming(NSQFrame frame) {
 		if (frame instanceof ResponseFrame) {
 			if ("_heartbeat_".equals(((ResponseFrame) frame).getMessage())) {
@@ -100,8 +100,8 @@ public class Connection {
 					try {
 						this.responses.offer(frame, 20, TimeUnit.SECONDS);
 					} catch (InterruptedException e) {
-						log.error("Caught", e);
-						//TODO: what to do here? we should probably disconnect!  
+						log.error("Incoming frame error", e);
+						//TODO: what to do here? we should probably disconnect!
 						this.close();
 					}
 				}
@@ -118,8 +118,8 @@ public class Connection {
 				//request some more!
 				this.command(NSQCommand.instance("RDY " + this.messagesPerBatch));
 			}
-			
-			
+
+
 			NSQMessage message = new NSQMessage();
 			message.setAttempts(((MessageFrame) frame).getAttempts());
 			message.setConnection(this);
@@ -135,8 +135,8 @@ public class Connection {
 		}
 		log.warn("Unknown frame type: " + frame);
 	}
-	
-	
+
+
 	void heartbeat() {
 		System.out.println("HEARTBEAT!");
 		this.heartbeats++;
@@ -144,7 +144,7 @@ public class Connection {
 		//send NOP here.
 		this.command(NSQCommand.instance("NOP"));
 	}
-	
+
 	/**
 	 * called when this connection is disconnected socket level
 	 * this is used internally, generally close() should be used instead.
@@ -152,8 +152,8 @@ public class Connection {
 	public void _disconnected() {
 		//clean up anything that needs cleaning up.
 		this.client._disconnected(this);
-	} 
-	
+	}
+
 	public int getHeartbeats() {
 		return heartbeats;
 	}
@@ -164,7 +164,7 @@ public class Connection {
 	public synchronized void _setLastHeartbeat() {
 		this.lastHeartbeat = new Date();
 	}
-	
+
 	public synchronized Date getLastHeartbeat() {
 		return lastHeartbeat;
 	}
@@ -192,16 +192,16 @@ public class Connection {
 		log.warn("Close called on connection: " + this);
 		this._disconnected();
 	}
-	
+
 	/**
 	 * issues a command and waits for the result
-	 * 
+	 *
 	 * @param command
 	 * @return
 	 * @throws Exception
 	 */
-	public NSQFrame commandAndWait(NSQCommand command) throws DisconnectedException{	
-	    
+	public NSQFrame commandAndWait(NSQCommand command) throws DisconnectedException{
+
 		try {
 			try {
 
@@ -209,45 +209,45 @@ public class Connection {
 					//throw timeout, and disconnect?
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
-				
+
 				this.responses.clear(); //clear the response queue if needed.
 				ChannelFuture fut = this.command(command);
-				
+
 				if (!fut.await(5, TimeUnit.SECONDS)) {
 					//throw timeout, and disconnect?
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
-				
+
 				NSQFrame frame = this.responses.poll(5, TimeUnit.SECONDS);
 				if (frame == null) {
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
-				
+
 				this.requests.poll(); //clear the request object
 				return frame;
-				
+
 			} catch (DisconnectedException x) {
 				throw x;
 			} catch (Exception x) {
 				throw new DisconnectedException("command: " + command + " timedout, disconnecting..", x);
 			}
 		} catch (DisconnectedException x) {
-			//now disconnect this 
+			//now disconnect this
 			this.close();
 			throw x;
 		}
 	}
-	
+
 	/**
 	 * issues a command.  doesnt wait on response, the future is only for delivery.
-	 * 
+	 *
 	 * @param command
 	 * @return
 	 */
 	public ChannelFuture command(NSQCommand command) {
-		return this.channel.write(command);
+        return this.channel.write(command);
 	}
-	
+
 	public String toString() {
 		return "NSQCONNECTION : " + super.toString() + " " + this.host + " : " + this.port;
 	}
