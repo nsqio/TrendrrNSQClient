@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.trendrr.nsq;
 
@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Dustin Norlander
  * @created Jan 15, 2013
- * 
+ *
  */
 public class NSQMessage {
 
@@ -23,7 +23,7 @@ public class NSQMessage {
 	protected Date timestamp;
 	protected byte[] message;
 	protected Connection connection;
-	
+
 	/**
 	 * Finished processing this message, let nsq know so it doesnt get reprocessed.
 	 */
@@ -34,18 +34,22 @@ public class NSQMessage {
 			log.error("Caught", e);
 		}
 	}
-	
+
 	/**
 	 * indicates a problem with processing, puts it back on the queue.
 	 */
-	public void requeue() {
+	public void requeue(int timeoutMillis) {
 		try {
-			this.connection.command(NSQCommand.instance("REQ " + new String(id, "ascii")));
+			this.connection.command(NSQCommand.instance("REQ " + new String(id, "ascii") + " " + timeoutMillis));
 		} catch (UnsupportedEncodingException e) {
 			log.error("Caught", e);
 		}
 	}
-	
+
+	public void requeue() {
+		requeue(0);
+	}
+
 	public Connection getConnection() {
 		return connection;
 	}
@@ -75,5 +79,5 @@ public class NSQMessage {
 	}
 	public void setMessage(byte[] message) {
 		this.message = message;
-	}	
+	}
 }
