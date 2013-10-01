@@ -205,7 +205,7 @@ public class Connection {
 		try {
 			try {
 
-				if (!this.requests.offer(command, 5, TimeUnit.SECONDS)) {
+				if (!this.requests.offer(command, 15, TimeUnit.SECONDS)) {
 					//throw timeout, and disconnect?
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
@@ -213,12 +213,12 @@ public class Connection {
 				this.responses.clear(); //clear the response queue if needed.
 				ChannelFuture fut = this.command(command);
 
-				if (!fut.await(5, TimeUnit.SECONDS)) {
+				if (!fut.await(15, TimeUnit.SECONDS)) {
 					//throw timeout, and disconnect?
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
 
-				NSQFrame frame = this.responses.poll(5, TimeUnit.SECONDS);
+				NSQFrame frame = this.responses.poll(15, TimeUnit.SECONDS);
 				if (frame == null) {
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
