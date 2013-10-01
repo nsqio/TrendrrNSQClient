@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.trendrr.nsq;
 
@@ -12,36 +12,36 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * 
+ *
  * A class that will collect messages and send as a batch after N messages or N bytes are written.
- * 
- * 
- * 
+ *
+ *
+ *
  * @author Dustin Norlander
  * @created Jan 22, 2013
- * 
+ *
  */
 public class Batch {
 
 	protected static Logger log = LoggerFactory.getLogger(Batch.class);
-	
+
 	protected long maxBytes = 1024768l - 50000;// 1024768 is the default nsqd message max.  subtract 50k so we dont accidentally go over the limit.
-	protected int maxMessages = 500;	
+	protected int maxMessages = 500;
 	protected long maxSeconds = 30;
 	protected String topic;
 
 	protected long totalMessages;
-	protected long totalBytes; 
+	protected long totalBytes;
 	protected Date expire = null;
 	protected List<byte[]> messages;
 	protected BatchCallback callback = null;
-	
+
 	public Batch(String topic, BatchCallback callback) {
 		this.topic = topic;
 		this.callback = callback;
 		this.getAndClear(); //set the default values for everything.
 	}
-	
+
 	public synchronized BatchCallback getCallback() {
 		return callback;
 	}
@@ -52,9 +52,9 @@ public class Batch {
 	}
 
 
-	
 
-	
+
+
 	public synchronized void addMessage(byte[] bytes) {
 		if (expire == null)
 			expire = new Date(new Date().getTime() + (1000*this.maxSeconds));
@@ -63,9 +63,9 @@ public class Batch {
 		totalBytes += 4; //for the message size
 		messages.add(bytes);
 	}
-	
-	
-	
+
+
+
 	/**
 	 * gets and clears if the current batch is ready.  else returns null
 	 * @return
@@ -82,7 +82,7 @@ public class Batch {
  		}
  		return null;
 	}
-	
+
 	public synchronized List<byte[]> getAndClear() {
 		this.totalBytes = 4;
 		this.totalMessages = 0;
@@ -90,9 +90,9 @@ public class Batch {
 		List<byte[]> messages = this.messages;
 		this.messages = new ArrayList<byte[]>();
 		return messages;
-		
+
 	}
-	
+
 	public synchronized long getMaxSeconds() {
 		return maxSeconds;
 	}
@@ -101,7 +101,7 @@ public class Batch {
 		this.maxSeconds = maxSeconds;
 	}
 
-	
+
 	public synchronized long getMaxBytes() {
 		return maxBytes;
 	}

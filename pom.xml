@@ -6,7 +6,7 @@
 
   <groupId>com.github.dustismo</groupId>
   <artifactId>trendrr-nsq-client</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -33,5 +33,22 @@
       <version>1.6.4</version>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
