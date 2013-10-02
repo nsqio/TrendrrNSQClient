@@ -53,30 +53,39 @@ public class NSQMessage {
 	public Connection getConnection() {
 		return connection;
 	}
+
 	public void setConnection(Connection connection) {
 		this.connection = connection;
 	}
+
 	public byte[] getId() {
 		return id;
 	}
+
 	public void setId(byte[] id) {
 		this.id = id;
 	}
+
 	public int getAttempts() {
 		return attempts;
 	}
+
 	public void setAttempts(int attempts) {
 		this.attempts = attempts;
 	}
+
 	public Date getTimestamp() {
 		return timestamp;
 	}
+
 	public void setTimestamp(Date timestamp) {
 		this.timestamp = timestamp;
 	}
+
 	public byte[] getMessage() {
 		return message;
 	}
+
 	public void setMessage(byte[] message) {
 		this.message = message;
 	}

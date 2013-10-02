@@ -27,9 +27,9 @@ public class NSQConsumer extends AbstractNSQClient {
     
 	public NSQConsumer(NSQLookup lookup, String topic, String channel, NSQMessageCallback callback) {
 		this.lookup = lookup;
-	    this.topic = topic;
-	    this.channel = channel;
-	    this.callback = callback;
+		this.topic = topic;
+		this.channel = channel;
+		this.callback = callback;
 	}
 	
 	@Override
