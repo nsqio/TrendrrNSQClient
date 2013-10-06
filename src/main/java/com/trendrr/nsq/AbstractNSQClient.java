@@ -67,6 +67,8 @@ public abstract class AbstractNSQClient {
 			timer.cancel();
 		}
 		timer = new Timer();
+
+        //TODO Use a scheduled executor service instead of a timer here
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {

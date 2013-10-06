@@ -5,6 +5,7 @@ package com.trendrr.nsq;
 
 import java.util.List;
 
+import com.trendrr.nsq.lookup.NSQLookup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

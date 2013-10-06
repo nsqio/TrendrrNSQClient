@@ -213,16 +213,12 @@ public class NSQProducer extends AbstractNSQClient {
 	
 	/**
 	 * Adds a new connection.
-	 * @param host
-	 * @param port
-	 * @param poolsize
+	 * @param host the host
+	 * @param port the port
+	 * @param poolsize the connection pool size
 	 */
 	public synchronized NSQProducer addAddress(String host, int port, int poolsize) {
-		ConnectionAddress addr = new ConnectionAddress();
-		addr.setHost(host);
-		addr.setPoolsize(poolsize);
-		addr.setPort(port);
-		this.addresses.add(addr);
+		this.addresses.add(new ConnectionAddress(host, port, poolsize));
 		return this;
 	}
 	

@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.trendrr.nsq.ConnectionAddress;
-import com.trendrr.nsq.NSQLookup;
 import com.trendrr.oss.DynMap;
 
 
@@ -52,10 +51,8 @@ public class NSQLookupDynMapImpl implements NSQLookup {
 			for (DynMap node : mp.getListOrEmpty(DynMap.class, "data.producers")) {		
 				String host = node.getString("broadcast_address", node.getString("address"));
 				String key =  host + ":" + node.getInteger("tcp_port");
-				ConnectionAddress address = new ConnectionAddress();
-				address.setHost(host);
-				address.setPort(node.getInteger("tcp_port"));
-				addresses.put(key, address);
+
+				addresses.put(key, new ConnectionAddress(host, node.getInteger("tcp_port")));
 			}
 		}
 		return new ArrayList<ConnectionAddress>(addresses.values());

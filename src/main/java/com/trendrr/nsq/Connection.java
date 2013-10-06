@@ -29,8 +29,7 @@ import com.trendrr.nsq.frames.ResponseFrame;
  *
  */
 public class Connection {
-
-	protected static Logger log = LoggerFactory.getLogger(Connection.class);
+	private static Logger log = LoggerFactory.getLogger(Connection.class);
 
 	Channel channel;
 	int heartbeats = 0;
@@ -87,9 +86,6 @@ public class Connection {
 	}
 
 
-
-
-
 	public void incoming(NSQFrame frame) {
 		if (frame instanceof ResponseFrame) {
 			if ("_heartbeat_".equals(((ResponseFrame) frame).getMessage())) {
@@ -127,7 +123,7 @@ public class Connection {
 			message.setMessage(((MessageFrame) frame).getMessageBody());
 			message.setTimestamp(new Date(((MessageFrame) frame).getTimestamp()));
 			if (this.callback == null) {
-				log.warn("NO CAllback, dropping message: " + message);
+				log.warn("NO Callback, dropping message: " + message);
 			} else {
 				this.callback.message(message);
 			}
@@ -138,7 +134,6 @@ public class Connection {
 
 
 	void heartbeat() {
-		System.out.println("HEARTBEAT!");
 		this.heartbeats++;
 		this.lastHeartbeat = new Date();
 		//send NOP here.

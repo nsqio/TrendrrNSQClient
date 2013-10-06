@@ -10,6 +10,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.trendrr.oss</groupId>
+      <artifactId>trendrr-oss</artifactId>
+      <version>1.0</version>
+    </dependency>
+    
+    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.0.13</version>
@@ -32,6 +38,49 @@
       <artifactId>slf4j-api</artifactId>
       <version>1.6.4</version>
     </dependency>
+
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-annotations</artifactId>
+          <version>2.2.2</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+          <version>2.2.2</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+          <version>2.2.2</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+          <version>r09</version>
+      </dependency>
+
+
   </dependencies>
 
+<distributionManagement>
+
+		<repository>
+			<id>h2o_repo</id>
+			<name>H2O releases repo</name>
+			<url>http://nexus01.elasticride.com:8081/nexus/content/repositories/releases</url>
+		</repository>
+
+		<snapshotRepository>
+			<id>h2o_repo</id>
+			<name>H2O snapshots repo</name>
+			<url>http://nexus01.elasticride.com:8081/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+
+
+
+	</distributionManagement>
 </project>
