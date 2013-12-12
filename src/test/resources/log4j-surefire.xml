@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration>
+
+    <!-- Production logging configuration -->
+
+    <appender
+            name="stdout"
+            class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param
+                    name="ConversionPattern"
+                    value="%d %-5p [%c{1}] {%t} : %m%n" />
+        </layout>
+    </appender>
+    <appender
+            name="ASYNC"
+            class="org.apache.log4j.AsyncAppender">
+        <appender-ref ref="stdout" />
+    </appender>
+
+
+    <root>
+        <priority value="INFO" /><!-- global threshold - the most important configuration option -->
+        <!--
+        Log levels are: OFF, FATAL, ERROR, WARN, INFO, DEBUG, TRACE, ALL
+        http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/Level.html
+        -->
+        <appender-ref ref="ASYNC" />
+    </root>
+
+</log4j:configuration>
