@@ -61,7 +61,7 @@ public class NSQLookupDynMapImpl implements NSQLookup {
 
     public String getHTML(String url) {
         URL u;
-        HttpURLConnection conn;
+        HttpURLConnection conn = null;
         BufferedReader rd = null;
         String line;
         String result = "";
@@ -77,10 +77,15 @@ public class NSQLookupDynMapImpl implements NSQLookup {
             logException("Caught an exception when trying to get nsq instances from lookup mechanism [url=" + url + "]", e);
         } finally {
             try {
-                if (rd != null)
+                if (rd != null){
                     rd.close();
+                }
             } catch (Exception e) {
                 logException("Caught an exception when trying to close buffered reader", e);
+            }
+            //Make sure to close the HTTP connection as well, otherwise the file descriptors will remain open
+            if (conn != null){
+                conn.disconnect();
             }
         }
         return result;
