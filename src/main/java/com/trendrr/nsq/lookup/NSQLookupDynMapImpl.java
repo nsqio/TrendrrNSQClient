@@ -80,16 +80,17 @@ public class NSQLookupDynMapImpl implements NSQLookup {
 	    	  log.error("Caught", e);
 	      } finally {
 	    	  try {
-	    		  if (rd != null)
-	    			  rd.close();
-					} catch (Exception e) {
-						log.error("Caught", e);
-					}
+    			  if (rd != null){
+    		  	  	rd.close();
+    		  	  }	    			
+				} catch (Exception e) {
+					log.error("Caught", e);
+				}
 
-					// Release memory and underlying resources on the HttpURLConnection otherwise we may run out of file descriptors and leak memory
-					if (conn != null){
-						conn.disconnect();
-					}
+				// Release memory and underlying resources on the HttpURLConnection otherwise we may run out of file descriptors and leak memory
+				if (conn != null){
+					conn.disconnect();
+				}
 	      }
 	      return result;
 	   } 
