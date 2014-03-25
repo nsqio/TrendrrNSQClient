@@ -1,19 +1,19 @@
 package com.trendrr.nsq;
 /**
- * 
+ *
  */
 
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
-import com.trendrr.oss.StringHelper;
+import com.trendrr.nsq.lookup.NSQLookupImpl;
 
 
 
@@ -21,7 +21,7 @@ import com.trendrr.oss.StringHelper;
 /**
  * @author Dustin Norlander
  * @created Jan 14, 2013
- * 
+ *
  */
 public class ExampleMain {
 
@@ -36,24 +36,24 @@ public class ExampleMain {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);		
+		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);
 		producer.start();
 		start = new Date();
-		String msg = StringHelper.randomString(10);
-		
+        String msg = String.valueOf(new Random().nextInt(10));
+
 //		try {
 //			producer.produce("test3", msg.getBytes());
 //			System.out.println("PRODUCE 1");
 //
-//			
+//
 //			List<byte[]> messages = new ArrayList<byte[]>();
 //			messages.add(msg.getBytes());
-//			
+//
 //			producer.produceMulti("test3", messages);
 //			if (true) {
 //				System.exit(1);
 //			}
-//			
+//
 //		} catch (DisconnectedException e1) {
 //			log.error("Caught", e1);
 //		} catch (BadTopicException e1) {
@@ -61,8 +61,8 @@ public class ExampleMain {
 //		} catch (BadMessageException e1) {
 //			log.error("Caught", e1);
 //		}
-		
-		
+
+
 //
 //		for (int i=0; i < 50000; i++) {
 //			if (i % 1000 == 0) {
@@ -74,46 +74,46 @@ public class ExampleMain {
 //				log.error("Caught", e);
 //			} catch (BadTopicException e) {
 //				log.error("Caught", e);
-//			} catch (BadMessageException e) { 
+//			} catch (BadMessageException e) {
 //				log.error("Caught", e);
 //			}
 //		}
-//		
+//
 ////		My System does this in about 10 seconds, so 5k messages per second on a single connection
 //		System.out.println("Produced 50k messages in " + (new Date().getTime()-start.getTime()) + " millis");
-//		
-		
+//
+
 		start = new Date();
 		for (int i=0; i < 50000; i++) {
 			if (i % 1000 == 0) {
 				System.out.println("producer: " + i);
 			}
-			producer.produceBatch("speedtest2", (msg + i).getBytes("utf8"));
+			producer.produceBatch("speedtest", (msg + i).getBytes("utf8"));
 		}
-		
+
 //		My System does this in about 10 seconds, so 5k messages per second on a single connection
 		System.out.println("Produced 50k batch messages in " + (new Date().getTime()-start.getTime()) + " millis");
-		
-		
-		if (true)
-			return;
-		
-        NSQLookup lookup = new NSQLookupDynMapImpl();
+
+
+//		if (true)
+//			return;
+
+        NSQLookup lookup = new NSQLookupImpl();
         lookup.addAddr("localhost", 4161);
-		
+
 		start = new Date();
 		/**
 		 * Consumer.  consume 50k messages and immediately exit
 		 */
 		NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "dustin", new NSQMessageCallback() {
-			
+
 			@Override
 			public void message(NSQMessage message) {
 				try {
-					
+
 					//now mark the message as finished.
 					message.finished();
-					
+
 					//or you could requeue it, which indicates a failure and puts it back on the queue.
 //					message.requeue();
 
@@ -126,24 +126,24 @@ public class ExampleMain {
 						start = new Date();
 						System.exit(1);
 					}
-					
+
 				} catch (Exception e) {
 					log.error("Caught", e);
 				}
 			}
-			
+
 			@Override
 			public void error(Exception x) {
 				log.warn("Caught", x);
 			}
 		});
-		
-		consumer.start();
-		
-		
-		
-	}
-	
 
-	
+		consumer.start();
+
+
+
+	}
+
+
+
 }
