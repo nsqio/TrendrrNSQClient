@@ -6,7 +6,7 @@
 
   <groupId>com.github.dustismo</groupId>
   <artifactId>trendrr-nsq-client</artifactId>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.3-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -81,23 +81,6 @@
 
   </dependencies>
 
-<distributionManagement>
-
-		<repository>
-			<id>h2o_repo</id>
-			<name>H2O releases repo</name>
-			<url>http://nexus01.elasticride.com:8081/nexus/content/repositories/releases</url>
-		</repository>
-
-		<snapshotRepository>
-			<id>h2o_repo</id>
-			<name>H2O snapshots repo</name>
-			<url>http://nexus01.elasticride.com:8081/nexus/content/repositories/snapshots</url>
-		</snapshotRepository>
-
-
-
-	</distributionManagement>
 
     <build>
         <plugins>
