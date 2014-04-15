@@ -13,8 +13,7 @@ import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -22,7 +21,6 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,20 +37,22 @@ import com.trendrr.nsq.netty.NSQPipeline;
  */
 public abstract class AbstractNSQClient {
 
-	protected static Logger log = LoggerFactory.getLogger(AbstractNSQClient.class);
-	
-	
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNSQClient.class);
+
+    private static final int CLEAN_UP_FREQUENCY = 1000 * 60 * 2;
+
 	/**
 	 * Protocol version sent to nsqd on initial connect
 	 */
-	public static byte[] MAGIC_PROTOCOL_VERSION = "  V2".getBytes();
-    public static long LOOKUP_PERIOD = 60*1000; //how often to recheck for new nodes (and clean up non responsive nodes)
+	private static byte[] MAGIC_PROTOCOL_VERSION = "  V2".getBytes();
+    private static long LOOKUP_PERIOD = 60*1000; //how often to recheck for new nodes (and clean up non responsive nodes)
     
     
-	Connections connections = new Connections();
+	private final Connections connections = new Connections();
 	// Configure the client.
-    protected ClientBootstrap bootstrap = null;
-    protected Timer timer = null;
+    private ClientBootstrap bootstrap = null;
+    private Timer timer = null;
+
     
     //this executor is where the callback code is handled
     protected Executor executor = Executors.newSingleThreadExecutor();
@@ -131,10 +131,11 @@ public abstract class AbstractNSQClient {
         // Wait until the connection attempt succeeds or fails.
         Channel channel = future.awaitUninterruptibly().getChannel();
         if (!future.isSuccess()) {
-            log.error("Caught", future.getCause());
+            LOGGER.error("Unable to create connection, caught: ", future.getCause());
             return null;
         }
-        log.warn("Creating connection: " + address + " : " + port);
+
+        LOGGER.warn("Creating connection: " + address + " : " + port);
         Connection conn = new Connection(address, port, channel, this);
         ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
         buf.writeBytes(MAGIC_PROTOCOL_VERSION);
@@ -151,7 +152,7 @@ public abstract class AbstractNSQClient {
 			conn.command(ident);
 			
 		} catch (UnknownHostException e) {
-			log.error("Caught", e);
+			LOGGER.error("Caught", e);
 		}
         		
         		
@@ -178,10 +179,11 @@ public abstract class AbstractNSQClient {
 		
 		
 		for (ConnectionAddress addr : addresses ) {
-			int num = addr.getPoolsize() - this.connections.connectionSize(addr.getHost(), addr.getPort());
+			int num = addr.getPoolsize() - connections.connectionSize(addr.getHost(), addr.getPort());
 			for (int i=0; i < num; i++) {
-				Connection conn = this.createConnection(addr.getHost(), addr.getPort());
-				this.connections.addConnection(conn);
+			    Connection conn = createConnection(addr.getHost(), addr.getPort());
+				connections.addConnection(conn);
+
 			}
 			//TODO: handle negative num? (i.e. if user lowered the poolsize we should kill some connections)
 		}
@@ -192,11 +194,11 @@ public abstract class AbstractNSQClient {
 	 * will run through and remove any connections that have not recieved a ping in the last 2 minutes.
 	 */
 	public synchronized void cleanupOldConnections() {
-		Date cutoff = new Date(new Date().getTime() - (1000*60*2));
+        Date cutoff = new Date(new Date().getTime() - CLEAN_UP_FREQUENCY);
 		try {
 			for (Connection c : this.connections.getConnections()) {
 				if (cutoff.after(c.getLastHeartbeat())) {
-					log.warn("Removing dead connection: " + c.getHost() + ":" + c.getPort());
+					LOGGER.warn("Removing dead connection [host={}, port={}]", c.getHost(), c.getPort());
 					c.close();
 					connections.remove(c);
 				}
@@ -205,17 +207,22 @@ public abstract class AbstractNSQClient {
 			//ignore
 		}
 	}
-	
+
+    public Connections getConnections(){
+        return connections;
+    }
+
+
 	/**
 	 * for internal use.  called when a connection is disconnected
 	 * @param connection
 	 */
 	public synchronized void _disconnected(Connection connection) {
-		log.warn("Disconnected!" + connection);
+		LOGGER.warn("Client disconnected [connection={}]", connection);
 		this.connections.remove(connection);
 	}
 	
-	public void close() {
+	public synchronized void close() {
 		this.timer.cancel();
 		this.connections.close();
 		this.bootstrap.releaseExternalResources();
