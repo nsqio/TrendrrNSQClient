@@ -120,7 +120,7 @@ public class NSQProducer extends AbstractNSQClient {
 		NoConnectionsException ex = new NoConnectionsException("no connections", null);
 		for (int i=0; i < this.connectionRetries; i++) {
 			try {
-				return this.connections.next();
+				return getConnections().next();
 			} catch (NoConnectionsException x) {
 				ex = x;
 				try {
