@@ -21,6 +21,7 @@
         <netty.version>3.6.1.Final</netty.version>
         <gson.version>2.2.2</gson.version>
         <junit.version>4.10</junit.version>
+        <mockito.version>1.9.5</mockito.version>
     </properties>
 
     <dependencies>
@@ -58,6 +59,14 @@
             <version>${logback.version}</version>
             <scope>test</scope>
         </dependency>
+        
+        <dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+        
     </dependencies>
 
     <build>
