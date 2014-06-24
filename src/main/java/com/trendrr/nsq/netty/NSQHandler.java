@@ -55,7 +55,7 @@ public class NSQHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		log.warn("NSQHandler exception caught", e);
+		log.warn("NSQHandler exception caught", e.getCause());
 
 		e.getChannel().close();
 
