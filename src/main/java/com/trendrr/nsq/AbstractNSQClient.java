@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.trendrr.nsq;
 
@@ -11,9 +11,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -30,10 +28,10 @@ import com.trendrr.nsq.netty.NSQPipeline;
 
 /**
  * Base class for producer and consumer
- * 
+ *
  * @author Dustin Norlander
  * @created Jan 22, 2013
- * 
+ *
  */
 public abstract class AbstractNSQClient {
 
@@ -45,9 +43,9 @@ public abstract class AbstractNSQClient {
 	 * Protocol version sent to nsqd on initial connect
 	 */
 	private static byte[] MAGIC_PROTOCOL_VERSION = "  V2".getBytes();
-    private static long LOOKUP_PERIOD = 60*1000; //how often to recheck for new nodes (and clean up non responsive nodes)
-    
-    
+    private volatile long lookupPeriod = 60 * 1000; //how often to recheck for new nodes (and clean up non responsive nodes)
+
+    private int messagesPerBatch = 200;
 	private final Connections connections = new Connections();
 	// Configure the client.
     private ClientBootstrap bootstrap = null;
@@ -56,10 +54,8 @@ public abstract class AbstractNSQClient {
     
     //this executor is where the callback code is handled
     protected Executor executor = Executors.newSingleThreadExecutor();
-	
-    /**
-	 * connects, ready to produce.
-	 */
+
+
 	public synchronized void start() {
 		this.connect();
 
@@ -74,16 +70,15 @@ public abstract class AbstractNSQClient {
 			public void run() {
 				connect();
 			}
-		}, LOOKUP_PERIOD, LOOKUP_PERIOD);
-		
+		}, lookupPeriod, lookupPeriod);
 	}
-	
+
 	/**
-	 * Should return a list of all the addresses that we should be currently connected to. 
+	 * Should return a list of all the addresses that we should be currently connected to.
 	 * @return
 	 */
 	public abstract List<ConnectionAddress> lookupAddresses();
-	
+
 	/**
 	 * this is the executor where the callbacks happen.  default is a new cached threadpool.
 	 * @param executor
@@ -91,16 +86,16 @@ public abstract class AbstractNSQClient {
 	public synchronized void setExecutor(Executor executor) {
 		this.executor = executor;
 	}
-	
+
 	public Executor getExecutor() {
-		return this.executor;	
+		return this.executor;
 	}
-	
+
 	/**
 	 * use this if you want to specify your own netty executors. by default will use
-	 * 
+	 *
 	 * Executors.newCachedThreadPool()
-	 * 
+	 *
 	 * @param boss
 	 * @param worker
 	 */
@@ -108,23 +103,19 @@ public abstract class AbstractNSQClient {
 		if (this.bootstrap != null) {
 			this.bootstrap.releaseExternalResources();
 		}
-		this.bootstrap = new ClientBootstrap(
-	            new NioClientSocketChannelFactory(
-	                    boss,
-	                    worker));
+		this.bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(boss, worker));
 		bootstrap.setPipelineFactory(new NSQPipeline());
 	}
-	
+
 	/**
 	 * Creates a new connection object.
-	 * 
-	 * Handles connection and sending magic protocol 
+	 *
+	 * Handles connection and sending magic protocol
 	 * @param address
 	 * @param port
-	 * @return
+	 * @return the created connection; <strong>null</strong> if no connection could be created
 	 */
 	protected Connection createConnection(String address, int port) {
-		
 		// Start the connection attempt.
         ChannelFuture future = bootstrap.connect(new InetSocketAddress(address, port));
 
@@ -135,8 +126,9 @@ public abstract class AbstractNSQClient {
             return null;
         }
 
-        LOGGER.warn("Creating connection: " + address + " : " + port);
+        LOGGER.info("Creating connection: " + address + " : " + port);
         Connection conn = new Connection(address, port, channel, this);
+        conn.setMessagesPerBatch(this.messagesPerBatch);
         ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
         buf.writeBytes(MAGIC_PROTOCOL_VERSION);
         channel.write(buf);
@@ -150,22 +142,18 @@ public abstract class AbstractNSQClient {
 					"}";
 			NSQCommand ident = NSQCommand.instance("IDENTIFY", identJson.getBytes());
 			conn.command(ident);
-			
+
 		} catch (UnknownHostException e) {
 			LOGGER.error("Caught", e);
 		}
-        		
-        		
-       
-        
-        
-        return conn;
+
+		return conn;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * Connects and subscribes to the requested topic and channel.
-	 * 
+	 *
 	 * safe to call repeatedly for node discovery.
 	 */
 	protected synchronized void connect() {
@@ -174,10 +162,10 @@ public abstract class AbstractNSQClient {
 			this.setNettyExecutors(Executors.newCachedThreadPool(),
 					Executors.newCachedThreadPool());
 		}
-		
+
 		List<ConnectionAddress> addresses = this.lookupAddresses();
-		
-		
+
+
 		for (ConnectionAddress addr : addresses ) {
 			int num = addr.getPoolsize() - connections.connectionSize(addr.getHost(), addr.getPort());
 			for (int i=0; i < num; i++) {
@@ -189,9 +177,9 @@ public abstract class AbstractNSQClient {
 		}
 		this.cleanupOldConnections();
 	}
-	
+
 	/**
-	 * will run through and remove any connections that have not recieved a ping in the last 2 minutes.
+	 * will run through and remove any connections that have not recieved a ping in the last N milliseconds
 	 */
 	public synchronized void cleanupOldConnections() {
         Date cutoff = new Date(new Date().getTime() - CLEAN_UP_FREQUENCY);
@@ -204,7 +192,7 @@ public abstract class AbstractNSQClient {
 				}
 			}
 		} catch (NoConnectionsException e) {
-			//ignore
+			//ignore - TODO: is it a good idea to swallow this exception?
 		}
 	}
 
@@ -212,6 +200,13 @@ public abstract class AbstractNSQClient {
         return connections;
     }
 
+	public void setMessagesPerBatch(int messagesPerBatch) {
+		this.messagesPerBatch = messagesPerBatch;
+	}
+
+	public void setLookupPeriod(long periodMillis) {
+		this.lookupPeriod = periodMillis;
+	}
 
 	/**
 	 * for internal use.  called when a connection is disconnected
@@ -221,11 +216,10 @@ public abstract class AbstractNSQClient {
 		LOGGER.warn("Client disconnected [connection={}]", connection);
 		this.connections.remove(connection);
 	}
-	
-	public synchronized void close() {
+
+	public void close() {
 		this.timer.cancel();
 		this.connections.close();
 		this.bootstrap.releaseExternalResources();
-		
 	}
 }

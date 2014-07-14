@@ -30,7 +30,7 @@ public class NSQLookupDynMapImpl implements NSQLookup {
     private static Logger LOGGER = LoggerFactory.getLogger(NSQLookupDynMapImpl.class);
 
     //By default log errors every five minutes otherwise logs become terribly verbose
-    private long errorLoggingInterval = 5 * 60 * 1000;
+    private volatile long errorLoggingInterval = 5 * 60 * 1000;
 
     private final Set<String> addresses = new HashSet<String>();
 

@@ -1,6 +1,8 @@
 ## TrendrrNSQCLient
 =============
 
+- Please Note, I am not actively maintaining this codebase.  If anyone wants to maintain a fork I can link to it.
+
 A fast netty based java client for [nsq][nsq].  We developed this client to use in various places in the trendrr.tv and curatorr.com stacks.
 It is currently deployed in production.  It produces and consumes billions of messages per day. 
 

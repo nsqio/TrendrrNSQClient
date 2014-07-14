@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.trendrr.nsq;
 
@@ -22,24 +22,22 @@ import com.trendrr.nsq.frames.ResponseFrame;
 /**
  * @author Dustin Norlander
  * @created Jan 22, 2013
- * 
+ *
  */
 public class NSQProducer extends AbstractNSQClient {
 
 	protected static Logger log = LoggerFactory.getLogger(NSQProducer.class);
 
 	List<ConnectionAddress> addresses = new ArrayList<ConnectionAddress>();
-	
-	int batchSize = 100;
-	
+
 	ConcurrentHashMap<String, Batch> batches = new ConcurrentHashMap<String, Batch>();
-	
+
 	/**
 	 * If no connections are available, will try this many times with 5 second pause between, before throwing a
 	 * no connections available exception.
 	 */
 	int connectionRetries = 5;
-	
+
 	public void configureBatch(String topic, BatchCallback callback, Integer maxMessages, Long maxBytes, Integer maxSeconds) {
 		Batch batch = new Batch(topic, callback);
 		if (maxBytes != null) {
@@ -52,10 +50,10 @@ public class NSQProducer extends AbstractNSQClient {
 			batch.setMaxSeconds(maxSeconds);
 		}
 		Batch old = this.batches.put(topic, batch);
-		if (old != null) 
+		if (old != null)
 			this.sendBatch(old, old.getAndClear());
 	}
-	
+
 	/**
 	 * flushes all batches
 	 */
@@ -67,7 +65,7 @@ public class NSQProducer extends AbstractNSQClient {
 			this.sendBatch(b, b.getAndClear());
 		}
 	}
-	
+
 	/**
 	 * sends the batch, sending result to callback
 	 * @param batch
@@ -83,7 +81,7 @@ public class NSQProducer extends AbstractNSQClient {
 			batch.getCallback().batchError(x, batch.getTopic(), messages);
 		}
 	}
-	
+
 	/**
 	 * produces a message in batch.  configure the batching options via
 	 * configureBatch method.
@@ -103,7 +101,7 @@ public class NSQProducer extends AbstractNSQClient {
 					log.error("Default batch callback for topic: " + topic, ex);
 				}
 			});
-			
+
 			this.batches.putIfAbsent(topic, def);
 		}
 		Batch batch = this.batches.get(topic);
@@ -114,8 +112,8 @@ public class NSQProducer extends AbstractNSQClient {
 			this.sendBatch(batch, messages);
 		}
 	}
-	
-	
+
+
 	protected synchronized Connection getConn() throws NoConnectionsException {
 		NoConnectionsException ex = new NoConnectionsException("no connections", null);
 		for (int i=0; i < this.connectionRetries; i++) {
@@ -134,7 +132,7 @@ public class NSQProducer extends AbstractNSQClient {
 		log.warn("Could not get a new connection within " + (this.connectionRetries*5) + " seconds. giving up..");
 		throw ex;
 	}
-	
+
 	/**
 	 * produce multiple messages.
 	 * @param topic
@@ -142,25 +140,25 @@ public class NSQProducer extends AbstractNSQClient {
 	 * @throws DisconnectedException
 	 * @throws BadTopicException
 	 * @throws BadMessageException
-	 * @throws NoConnectionsException 
+	 * @throws NoConnectionsException
 	 */
 	public void produceMulti(String topic, List<byte[]> message) throws DisconnectedException, BadTopicException, BadMessageException, NoConnectionsException{
 		if (message == null || message.isEmpty()) {
 			return;
 		}
-		
+
 		if (message.size() == 1) {
-			//encoding will be screwed up if we MPUB a 
+			//encoding will be screwed up if we MPUB a
 			this.produce(topic, message.get(0));
 			return;
 		}
-		
+
 		Connection c = this.getConn();
-		
+
 		NSQCommand command = NSQCommand.instance("MPUB " + topic);
 		command.setData(message);
-		
-		
+
+
 		NSQFrame frame = c.commandAndWait(command);
 		if (frame instanceof ResponseFrame) {
 			c._setLastHeartbeat(); //TODO: remove once producer server heartbeats in place.
@@ -178,17 +176,17 @@ public class NSQProducer extends AbstractNSQClient {
 		//disconnect
 		c.close();
 		throw new DisconnectedException("Error happened: " + frame, null);
-		
+
 	}
-	
+
 	/**
 	 * @param topic
 	 * @param message
-	 * @throws NoConnectionsException 
+	 * @throws NoConnectionsException
 	 */
 	public void produce(String topic, byte[] message) throws DisconnectedException, BadTopicException, BadMessageException, NoConnectionsException{
 		Connection c = this.getConn();
-		
+
 		NSQCommand command = NSQCommand.instance("PUB " + topic, message);
 		NSQFrame frame = c.commandAndWait(command);
 		if (frame instanceof ResponseFrame) {
@@ -207,10 +205,10 @@ public class NSQProducer extends AbstractNSQClient {
 		//disconnect
 		c.close();
 		throw new DisconnectedException("Error happened: " + frame, null);
-		
+
 	}
-	
-	
+
+
 	/**
 	 * Adds a new connection.
 	 * @param host the host
@@ -221,13 +219,13 @@ public class NSQProducer extends AbstractNSQClient {
 		this.addresses.add(new ConnectionAddress(host, port, poolsize));
 		return this;
 	}
-	
+
 	@Override
 	public void close() {
 		this.flushBatches();
 		super.close();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see com.trendrr.nsq.AbstractNSQClient#lookupAddresses()
 	 */

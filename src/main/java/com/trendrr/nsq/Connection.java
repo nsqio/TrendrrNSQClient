@@ -29,23 +29,23 @@ import com.trendrr.nsq.frames.ResponseFrame;
  *
  */
 public class Connection {
-	private static Logger log = LoggerFactory.getLogger(Connection.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(Connection.class);
 
-	Channel channel;
-	int heartbeats = 0;
-	Date lastHeartbeat = new Date();
+	private Channel channel;
+	private int heartbeats = 0;
+	private Date lastHeartbeat = new Date();
 
-	NSQMessageCallback callback = null;
-	AtomicLong totalMessages = new AtomicLong(0l);
-	int messagesPerBatch = 200;
+	private NSQMessageCallback callback = null;
+	private AtomicLong totalMessages = new AtomicLong(0l);
+	private int messagesPerBatch = 200;
 
-	AbstractNSQClient client = null;
+	private AbstractNSQClient client = null;
 
-	String host = null;
-	int port;
+	private String host = null;
+	private int port;
 
-	LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<NSQCommand>(1);
-	LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<NSQFrame>(1);
+	private LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<NSQCommand>(1);
+	private LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<NSQFrame>(1);
 
 
 	public Connection(String host, int port, Channel channel, AbstractNSQClient client) {
@@ -58,7 +58,6 @@ public class Connection {
 
 	/**
 	 * gets the owner of this connection (either a NSQProducer or NSQConsumer)
-	 * @return
 	 */
 	public AbstractNSQClient getParent() {
 		return this.client;
@@ -80,11 +79,9 @@ public class Connection {
 		return messagesPerBatch;
 	}
 
-
 	public void setMessagesPerBatch(int messagesPerBatch) {
 		this.messagesPerBatch = messagesPerBatch;
 	}
-
 
 	public void incoming(NSQFrame frame) {
 		if (frame instanceof ResponseFrame) {
@@ -96,7 +93,7 @@ public class Connection {
 					try {
 						this.responses.offer(frame, 20, TimeUnit.SECONDS);
 					} catch (InterruptedException e) {
-						log.error("Incoming frame error", e);
+                        LOGGER.error("Incoming frame error", e);
 						//TODO: what to do here? we should probably disconnect!
 						this.close();
 					}
@@ -104,36 +101,41 @@ public class Connection {
 				return;
 			}
 		}
+
 		if (frame instanceof ErrorFrame) {
 			this.responses.add(frame);
 			return;
 		}
+
 		if (frame instanceof MessageFrame) {
+			MessageFrame msg = (MessageFrame) frame;
 			long tot = this.totalMessages.incrementAndGet();
-			if (tot % messagesPerBatch > (messagesPerBatch/2)) {
+			if (tot % messagesPerBatch > (messagesPerBatch / 2)) {
 				//request some more!
 				this.command(NSQCommand.instance("RDY " + this.messagesPerBatch));
 			}
 
-
 			NSQMessage message = new NSQMessage();
-			message.setAttempts(((MessageFrame) frame).getAttempts());
+			message.setAttempts(msg.getAttempts());
 			message.setConnection(this);
-			message.setId(((MessageFrame) frame).getMessageId());
-			message.setMessage(((MessageFrame) frame).getMessageBody());
-			message.setTimestamp(new Date(((MessageFrame) frame).getTimestamp()));
+			message.setId(msg.getMessageId());
+			message.setMessage(msg.getMessageBody());
+			message.setTimestamp(new Date(TimeUnit.NANOSECONDS.toMillis(msg.getTimestamp())));
 			if (this.callback == null) {
-				log.warn("NO Callback, dropping message: " + message);
+                LOGGER.warn("NO Callback, dropping message: " + message);
 			} else {
 				this.callback.message(message);
 			}
 			return;
 		}
-		log.warn("Unknown frame type: " + frame);
+
+        LOGGER.warn("Unknown frame type: " + frame);
 	}
 
 
 	void heartbeat() {
+        // This should be logged at debug level - it's more useful for troubleshooting and should not interfere with actual INFO logs
+        LOGGER.debug("HEARTBEAT!");
 		this.heartbeats++;
 		this.lastHeartbeat = new Date();
 		//send NOP here.
@@ -182,9 +184,9 @@ public class Connection {
 		try {
 			channel.close().await(10000);
 		} catch (Exception x) {
-			log.error("Caught", x);
+			LOGGER.error("Caught", x);
 		}
-		log.warn("Close called on connection: " + this);
+		LOGGER.warn("Close called on connection: " + this);
 		this._disconnected();
 	}
 
@@ -195,12 +197,12 @@ public class Connection {
 	 * @return
 	 * @throws Exception
 	 */
-	public NSQFrame commandAndWait(NSQCommand command) throws DisconnectedException{
+	public NSQFrame commandAndWait(NSQCommand command) throws DisconnectedException {
 
 		try {
 			try {
 
-				if (!this.requests.offer(command, 5, TimeUnit.SECONDS)) {
+				if (!this.requests.offer(command, 15, TimeUnit.SECONDS)) {
 					//throw timeout, and disconnect?
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
@@ -208,12 +210,12 @@ public class Connection {
 				this.responses.clear(); //clear the response queue if needed.
 				ChannelFuture fut = this.command(command);
 
-				if (!fut.await(5, TimeUnit.SECONDS)) {
+				if (!fut.await(15, TimeUnit.SECONDS)) {
 					//throw timeout, and disconnect?
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
 
-				NSQFrame frame = this.responses.poll(5, TimeUnit.SECONDS);
+				NSQFrame frame = this.responses.poll(15, TimeUnit.SECONDS);
 				if (frame == null) {
 					throw new DisconnectedException("command: " + command + " timedout, disconnecting..", null);
 				}
