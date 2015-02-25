@@ -1,10 +1,10 @@
 ## TrendrrNSQClient
 
-A fast netty-based java client for [NSQ][nsq] initially developed and maintained by @dustismo
+A fast netty-based java client for [NSQ][nsq] initially developed and maintained by [@dustismo](https://github.com/dustismo)
 for use in various places in the trendrr.tv and curatorr.com stacks.
 
-**I (@mreiferson) am currently maintaining this repo to facilitate bug fixes and minor updates and
-am interested in finding a longer-tem maintainer.**
+**I ([@mreiferson](https://github.com/mreiferson)) am currently maintaining this repo to facilitate
+bug fixes and minor updates and am interested in finding a longer-tem maintainer.**
 
 ## Consumer
 
