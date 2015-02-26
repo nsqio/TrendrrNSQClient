@@ -68,7 +68,11 @@ public abstract class AbstractNSQClient {
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				connect();
+				try {
+					connect();
+				} catch (Throwable t) {
+					log.error("Error in periodic `connect` call", t);
+				}
 			}
 		}, lookupPeriod, lookupPeriod);
 	}
@@ -176,6 +180,7 @@ public abstract class AbstractNSQClient {
 			//TODO: handle negative num? (i.e. if user lowered the poolsize we should kill some connections)
 		}
 		this.cleanupOldConnections();
+        this.adjustPerConnectionMessagePerBatch();
 	}
 
 	/**
@@ -195,6 +200,31 @@ public abstract class AbstractNSQClient {
 			//ignore
 		}
 	}
+
+    /**
+     * Adjust max in flight depending on the number of connections
+     */
+    public synchronized void adjustPerConnectionMessagePerBatch() {
+        try {
+            int numConnections = this.connections.size();
+            if (numConnections == 0) {
+                log.warn("connect: No connections; skipping max-in-flight adjustment");
+            } else {
+                int perConnectionInFlight;
+                if (this.messagesPerBatch < numConnections) {
+                    perConnectionInFlight = 1;
+                } else {
+                    perConnectionInFlight = this.messagesPerBatch / numConnections;
+                }
+                for (Connection conn: this.connections.getConnections()) {
+                    conn.setMessagesPerBatch(perConnectionInFlight);
+                }
+            }
+        } catch (NoConnectionsException nce) {
+            // This should never happen since it looks like the code doesn't actualy throw an exception
+            log.warn("Attempting to adjust max-in-flight but found no connections.", nce);
+        }
+    }
 
 	public void setMessagesPerBatch(int messagesPerBatch) {
 		this.messagesPerBatch = messagesPerBatch;
