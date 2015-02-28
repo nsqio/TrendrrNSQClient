@@ -13,17 +13,17 @@ import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.trendrr.nsq.netty.NSQHandler;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 
 import com.trendrr.nsq.exceptions.NoConnectionsException;
-import com.trendrr.nsq.netty.NSQPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import org.apache.logging.log4j.LogManager;
 
 
 /**
@@ -34,9 +34,6 @@ import com.trendrr.nsq.netty.NSQPipeline;
  *
  */
 public abstract class AbstractNSQClient {
-
-	protected static Logger log = LoggerFactory.getLogger(AbstractNSQClient.class);
-
 
 	/**
 	 * Protocol version sent to nsqd on initial connect
@@ -49,7 +46,7 @@ public abstract class AbstractNSQClient {
 
 	Connections connections = new Connections();
 	// Configure the client.
-	protected ClientBootstrap bootstrap = null;
+	protected Bootstrap bootstrap = null;
 	protected Timer timer = null;
 
 	//this executor is where the callback code is handled
@@ -100,11 +97,10 @@ public abstract class AbstractNSQClient {
 	 * @param worker
 	 */
 	public synchronized void setNettyExecutors(Executor boss, Executor worker) {
-		if (this.bootstrap != null) {
-			this.bootstrap.releaseExternalResources();
-		}
-		this.bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(boss, worker));
-		bootstrap.setPipelineFactory(new NSQPipeline());
+
+		bootstrap = new Bootstrap();
+        bootstrap.group(new NioEventLoopGroup());
+        bootstrap.handler(new NSQHandler());
 	}
 
 	/**
@@ -121,16 +117,16 @@ public abstract class AbstractNSQClient {
 		ChannelFuture future = bootstrap.connect(new InetSocketAddress(address, port));
 
 		// Wait until the connection attempt succeeds or fails.
-		Channel channel = future.awaitUninterruptibly().getChannel();
+		Channel channel = future.awaitUninterruptibly().channel();
 		if (!future.isSuccess()) {
-		    log.error("Caught", future.getCause());
+            LogManager.getLogger(this).error("Caught", future.cause());
 		    return null;
 		}
-		log.info("Creating connection: " + address + " : " + port);
+        LogManager.getLogger(this).info("Creating connection: " + address + " : " + port);
 		Connection conn = new Connection(address, port, channel, this);
 		conn.setMessagesPerBatch(this.messagesPerBatch);
 
-		ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
+        ByteBuf buf = Unpooled.buffer();
 		buf.writeBytes(MAGIC_PROTOCOL_VERSION);
 		channel.write(buf);
 
@@ -145,7 +141,7 @@ public abstract class AbstractNSQClient {
 			conn.command(ident);
 
 		} catch (UnknownHostException e) {
-			log.error("Caught", e);
+            LogManager.getLogger(this).error("Caught", e);
 		}
 
 		return conn;
@@ -186,7 +182,7 @@ public abstract class AbstractNSQClient {
 		try {
 			for (Connection c : this.connections.getConnections()) {
 				if (cutoff.after(c.getLastHeartbeat())) {
-					log.warn("Removing dead connection: " + c.getHost() + ":" + c.getPort());
+                    LogManager.getLogger(this).warn("Removing dead connection: " + c.getHost() + ":" + c.getPort());
 					c.close();
 					connections.remove(c);
 				}
@@ -209,14 +205,12 @@ public abstract class AbstractNSQClient {
 	 * @param connection
 	 */
 	public synchronized void _disconnected(Connection connection) {
-		log.warn("Disconnected!" + connection);
+        LogManager.getLogger(this).warn("Disconnected!" + connection);
 		this.connections.remove(connection);
 	}
 
 	public void close() {
 		this.timer.cancel();
 		this.connections.close();
-		this.bootstrap.releaseExternalResources();
-
 	}
 }

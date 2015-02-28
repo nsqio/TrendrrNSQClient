@@ -1,23 +1,9 @@
 package com.trendrr.nsq;
-/**
- * 
- */
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
-/**
- * @author Dustin Norlander
- * @created Jan 14, 2013
- * 
- */
 public class NSQCommand {
-
-	protected static Logger log = LoggerFactory.getLogger(NSQCommand.class);
 
 	public static NSQCommand instance(String line) {
 		NSQCommand n = new NSQCommand();

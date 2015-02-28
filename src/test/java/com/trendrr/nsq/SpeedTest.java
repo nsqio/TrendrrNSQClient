@@ -1,14 +1,13 @@
 /**
  * 
  */
-
+package com.trendrr.nsq;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
 
 import com.trendrr.nsq.BatchCallback;
 import com.trendrr.nsq.NSQMessageCallback;
@@ -26,7 +25,6 @@ import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
  */
 public class SpeedTest {
 
-	protected static Logger log = LoggerFactory.getLogger(SpeedTest.class);
 	static String address;
 	static int port;
 	
@@ -82,13 +80,13 @@ public class SpeedTest {
 					}
 					
 				} catch (Exception e) {
-					log.error("Caught", e);
+                    LogManager.getLogger(SpeedTest.class).error("Caught", e);
 				}
 			}
 			
 			@Override
 			public void error(Exception x) {
-				log.warn("Caught", x);
+                LogManager.getLogger(SpeedTest.class).warn("Caught", x);
 			}
 		});
 		

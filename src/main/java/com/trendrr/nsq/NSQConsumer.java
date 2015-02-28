@@ -1,24 +1,12 @@
 package com.trendrr.nsq;
-/**
- * 
- */
 
+import com.google.common.base.Throwables;
+
+import java.io.IOException;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
-
-/**
- * @author Dustin Norlander
- * @created Jan 14, 2013
- * 
- */
 public class NSQConsumer extends AbstractNSQClient {
 
-	protected static Logger log = LoggerFactory.getLogger(NSQConsumer.class);
-	
 	NSQLookup lookup;
 	String topic = null;
 	String channel = null;
@@ -50,6 +38,10 @@ public class NSQConsumer extends AbstractNSQClient {
 	 */
 	@Override
 	public List<ConnectionAddress> lookupAddresses() {
-		return lookup.lookup(topic);
-	}
+        try {
+            return lookup.lookup(topic);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 }

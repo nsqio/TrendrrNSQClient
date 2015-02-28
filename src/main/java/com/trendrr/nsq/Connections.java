@@ -1,30 +1,19 @@
-/**
- * 
- */
 package com.trendrr.nsq;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.trendrr.nsq.exceptions.NoConnectionsException;
+import org.apache.logging.log4j.LogManager;
 
 
 /**
  * Wraps a series of connections.  
- * 
- * 
- * @author Dustin Norlander
- * @created Jan 22, 2013
- * 
+ *
  */
 public class Connections {
 
-	protected static Logger log = LoggerFactory.getLogger(Connections.class);
-	
 	protected HashMap<String, List<Connection>> connections = new HashMap<String, List<Connection>>();
 	protected List<Connection> connectionList = new ArrayList<Connection>();
 	protected long rrCount = 0;
@@ -36,12 +25,12 @@ public class Connections {
 		
 		String key = connection.getHost() + ":" + connection.getPort();
 		if (connectionList.contains(connection)) {
-			log.warn("Already contains connection:" + connection);
+            LogManager.getLogger(this).warn("Already contains connection:" + connection);
 			return;
 		}
 		
 		if (connections.get(key) == null) {
-			connections.put(key, new ArrayList<Connection>());
+			connections.put(key, new ArrayList<>());
 		}
 		connections.get(key).add(connection);
 		connectionList.add(connection);
@@ -84,7 +73,7 @@ public class Connections {
 	 */
 	public synchronized Connection next() throws NoConnectionsException {
 		if (connectionList.size() == 0) {
-			log.warn("No connections available!");
+            LogManager.getLogger(this).warn("No connections available!");
 			throw new NoConnectionsException("No connections available", null);
 		}
 		
@@ -94,7 +83,7 @@ public class Connections {
 	public synchronized void remove(Connection connection) {
 		String key = connection.getHost() + ":" + connection.getPort();
 		if (!connectionList.contains(connection)) {
-			log.warn("Does not contain : " + key + ": " + connection);
+            LogManager.getLogger(this).warn("Does not contain : " + key + ": " + connection);
 			return;
 		}
 		List<Connection> conn = connections.get(key);
@@ -103,13 +92,13 @@ public class Connections {
 			connections.remove(key);
 		}
 		this.connectionList.remove(connection);
-		log.warn("REMOVED: " + key);
+        LogManager.getLogger(this).warn("REMOVED: " + key);
 	}
 	
 	public synchronized void remove(String host, int port) {
 		List<Connection> conns = this.connections.remove(host + ":" + port);
 		if (conns == null) {
-			log.warn("no connection : " +host + ":" + port);
+            LogManager.getLogger(this).warn("no connection : " + host + ":" + port);
 			return;
 		}
 		this.connectionList.removeAll(conns);		

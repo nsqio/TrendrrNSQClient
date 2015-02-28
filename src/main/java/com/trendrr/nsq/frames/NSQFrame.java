@@ -1,20 +1,7 @@
-/**
- * 
- */
 package com.trendrr.nsq.frames;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
-/**
- * @author Dustin Norlander
- * @created Jan 14, 2013
- * 
- */
 public abstract class NSQFrame {
 
-	protected static Logger log = LoggerFactory.getLogger(NSQFrame.class);
 	int size;
 	int frameId;
 	byte[] data;

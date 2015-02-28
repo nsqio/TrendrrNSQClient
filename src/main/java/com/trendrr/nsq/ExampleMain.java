@@ -1,31 +1,16 @@
 package com.trendrr.nsq;
-/**
- * 
- */
-
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.logging.log4j.LogManager;
 import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
-import com.trendrr.oss.StringHelper;
 
-
-
-
-/**
- * @author Dustin Norlander
- * @created Jan 14, 2013
- * 
- */
 public class ExampleMain {
 
-	protected static Logger log = LoggerFactory.getLogger(ExampleMain.class);
 	static AtomicInteger processed = new AtomicInteger(0);
 	static Date start;
 	/**
@@ -39,7 +24,7 @@ public class ExampleMain {
 		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);		
 		producer.start();
 		start = new Date();
-		String msg = StringHelper.randomString(10);
+		String msg = randomString();
 		
 //		try {
 //			producer.produce("test3", msg.getBytes());
@@ -128,13 +113,13 @@ public class ExampleMain {
 					}
 					
 				} catch (Exception e) {
-					log.error("Caught", e);
+                    LogManager.getLogger(ExampleMain.class).error("Caught", e);
 				}
 			}
 			
 			@Override
 			public void error(Exception x) {
-				log.warn("Caught", x);
+				LogManager.getLogger(ExampleMain.class).warn("Caught", x);
 			}
 		});
 		
@@ -143,7 +128,10 @@ public class ExampleMain {
 		
 		
 	}
-	
 
-	
+    private static String randomString() {
+        return "String" + new Random().nextInt();
+    }
+
+
 }

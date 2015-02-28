@@ -4,6 +4,8 @@ package com.trendrr.nsq;
  */
 
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.List;
 
 
@@ -29,5 +31,5 @@ public interface NSQLookup {
 	 * @param topic
 	 * @return
 	 */
-	public List<ConnectionAddress> lookup(String topic);
+	public List<ConnectionAddress> lookup(String topic) throws IOException;
 }

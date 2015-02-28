@@ -7,8 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
 
 import com.trendrr.nsq.exceptions.BadMessageException;
 import com.trendrr.nsq.exceptions.BadTopicException;
@@ -25,9 +24,6 @@ import com.trendrr.nsq.frames.ResponseFrame;
  *
  */
 public class NSQProducer extends AbstractNSQClient {
-
-	protected static Logger log = LoggerFactory.getLogger(NSQProducer.class);
-
 	List<ConnectionAddress> addresses = new ArrayList<ConnectionAddress>();
 
 	ConcurrentHashMap<String, Batch> batches = new ConcurrentHashMap<String, Batch>();
@@ -98,7 +94,7 @@ public class NSQProducer extends AbstractNSQClient {
 				}
 				@Override
 				public void batchError(Exception ex, String topic, List<byte[]> messages) {
-					log.error("Default batch callback for topic: " + topic, ex);
+                    LogManager.getLogger(this).error("Default batch callback for topic: " + topic, ex);
 				}
 			});
 
@@ -125,11 +121,11 @@ public class NSQProducer extends AbstractNSQClient {
 					Thread.sleep(5*1000);
 				} catch (InterruptedException e) {}
 				//try to reconnect..
-				log.warn("Attempting to reconnect");
+                LogManager.getLogger(this).warn("Attempting to reconnect");
 				this.connect();
 			}
 		}
-		log.warn("Could not get a new connection within " + (this.connectionRetries*5) + " seconds. giving up..");
+        LogManager.getLogger(this).warn("Could not get a new connection within " + (this.connectionRetries * 5) + " seconds. giving up..");
 		throw ex;
 	}
 

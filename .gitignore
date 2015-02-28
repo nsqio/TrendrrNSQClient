@@ -1,10 +1,7 @@
 *.class
 
-build/classes
-build/jar
-build/build.num
 target
-
-# Package Files #
-*.war
-*.ear
+.idea
+*.iml
+.classpath
+.project

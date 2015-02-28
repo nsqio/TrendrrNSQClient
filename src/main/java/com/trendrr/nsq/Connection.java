@@ -1,37 +1,23 @@
 package com.trendrr.nsq;
 
-/**
- *
- */
-
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+
 
 import com.trendrr.nsq.exceptions.DisconnectedException;
 import com.trendrr.nsq.frames.ErrorFrame;
 import com.trendrr.nsq.frames.MessageFrame;
 import com.trendrr.nsq.frames.NSQFrame;
 import com.trendrr.nsq.frames.ResponseFrame;
+import io.netty.util.AttributeKey;
+import org.apache.logging.log4j.LogManager;
 
-
-
-
-/**
- * @author Dustin Norlander
- * @created Jan 14, 2013
- *
- */
 public class Connection {
-
-	protected static Logger log = LoggerFactory.getLogger(Connection.class);
-
 	Channel channel;
 	int heartbeats = 0;
 	Date lastHeartbeat = new Date();
@@ -45,13 +31,16 @@ public class Connection {
 	String host = null;
 	int port;
 
+    public static final AttributeKey<Connection> STATE =
+            AttributeKey.valueOf("Connection.state");
+
 	LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<NSQCommand>(1);
 	LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<NSQFrame>(1);
 
 
 	public Connection(String host, int port, Channel channel, AbstractNSQClient client) {
 		this.channel = channel;
-		this.channel.setAttachment(this);
+		this.channel.attr(STATE).set(this);
 		this.client = client;
 		this.host = host;
 		this.port = port;
@@ -94,7 +83,7 @@ public class Connection {
 					try {
 						this.responses.offer(frame, 20, TimeUnit.SECONDS);
 					} catch (InterruptedException e) {
-						log.error("Incoming frame error", e);
+						LogManager.getLogger(this).error("Incoming frame error", e);
 						//TODO: what to do here? we should probably disconnect!
 						this.close();
 					}
@@ -123,19 +112,19 @@ public class Connection {
 			message.setMessage(msg.getMessageBody());
 			message.setTimestamp(new Date(TimeUnit.NANOSECONDS.toMillis(msg.getTimestamp())));
 			if (this.callback == null) {
-				log.warn("NO CAllback, dropping message: " + message);
+                LogManager.getLogger(this).warn("NO CAllback, dropping message: " + message);
 			} else {
 				this.callback.message(message);
 			}
 			return;
 		}
 
-		log.warn("Unknown frame type: " + frame);
+        LogManager.getLogger(this).warn("Unknown frame type: " + frame);
 	}
 
 
 	void heartbeat() {
-		log.info("HEARTBEAT!");
+        LogManager.getLogger(this).info("HEARTBEAT!");
 		this.heartbeats++;
 		this.lastHeartbeat = new Date();
 		//send NOP here.
@@ -184,9 +173,9 @@ public class Connection {
 		try {
 			channel.close().await(10000);
 		} catch (Exception x) {
-			log.error("Caught", x);
+            LogManager.getLogger(this).error("Caught", x);
 		}
-		log.warn("Close called on connection: " + this);
+        LogManager.getLogger(this).warn("Close called on connection: " + this);
 		this._disconnected();
 	}
 

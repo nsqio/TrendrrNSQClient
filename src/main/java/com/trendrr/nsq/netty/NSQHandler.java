@@ -1,70 +1,50 @@
 package com.trendrr.nsq.netty;
-/**
- *
- */
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelHandlerContext;
+
 
 import com.trendrr.nsq.Connection;
 import com.trendrr.nsq.frames.NSQFrame;
+import org.apache.logging.log4j.LogManager;
 
+public class NSQHandler extends SimpleChannelInboundHandler<NSQFrame> {
 
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        Connection connection = ctx.channel().attr(Connection.STATE).get();
+        if(connection != null) {
+            LogManager.getLogger(this).warn("Channel disconnected! " + connection);
+            connection._disconnected();
+        } else {
+            LogManager.getLogger(this).warn("No connection set for : " + ctx.channel());
+        }
+    }
 
-/**
- * @author Dustin Norlander
- * @created Jan 14, 2013
- *
- */
-public class NSQHandler extends SimpleChannelUpstreamHandler {
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        super.exceptionCaught(ctx, cause);
+        LogManager.getLogger(this).warn("NSQHandler exception caught", cause);
 
-	protected static Logger log = LoggerFactory.getLogger(NSQHandler.class);
-
-	@Override
-	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-		final NSQFrame frame = (NSQFrame)e.getMessage();
-		final Connection con = (Connection)e.getChannel().getAttachment();
-		if (con != null) {
-			con.getParent().getExecutor().execute(new Runnable() {
-				@Override
-				public void run() {
-					con.incoming(frame);
-				}
-			});
-		} else {
-			log.warn("No connection set for : " + e.getChannel());
-			//TODO: should we kill the channel?
-		}
-	}
-
-	@Override
-	public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-		Connection con = (Connection)e.getChannel().getAttachment();
-		if (con != null) {
-			log.warn("Channel disconnected! " + con);
-			con._disconnected();
-		} else {
-			log.warn("No connection set for : " + e.getChannel());
-		}
-	}
-
-	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		log.warn("NSQHandler exception caught", e);
-
-		e.getChannel().close();
-
-		Connection con = (Connection)e.getChannel().getAttachment();
+		ctx.channel().close();
+		Connection con = ctx.channel().attr(Connection.STATE).get();
 		if (con != null) {
 			con._disconnected();
 		} else {
-			log.warn("No connection set for : " + e.getChannel());
+			LogManager.getLogger(this).warn("No connection set for : " + ctx.channel());
 		}
 	}
 
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, NSQFrame msg) throws Exception {
+        final Connection con = ctx.channel().attr(Connection.STATE).get();
+        if (con != null) {
+            con.getParent().getExecutor().execute(  () ->
+                            con.incoming(msg)
+            );
+        } else {
+            LogManager.getLogger(this).warn("No connection set for : " + ctx.channel());
+        }
+    }
 }

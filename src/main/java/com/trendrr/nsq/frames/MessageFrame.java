@@ -1,23 +1,10 @@
-/**
- * 
- */
 package com.trendrr.nsq.frames;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
-
-/**
- * @author Dustin Norlander
- * @created Jan 14, 2013
- * 
- */
 public class MessageFrame extends NSQFrame {
 
-	protected static Logger log = LoggerFactory.getLogger(MessageFrame.class);
-	
 	long timestamp;
 	int attempts;
 	byte[] messageId;
@@ -31,8 +18,8 @@ public class MessageFrame extends NSQFrame {
 	public void setData(byte[] bytes) {
 		//parse the bytes
 		super.setData(bytes);
-		
-		ChannelBuffer buf = ChannelBuffers.wrappedBuffer(bytes);
+
+        ByteBuf buf = Unpooled.wrappedBuffer(bytes);
 		this.timestamp = buf.readLong();
 		this.attempts = buf.readShort();
 		this.messageId = new byte[16];
