@@ -18,7 +18,7 @@ public class NSQCommand {
 	}
 	
 	String line;
-	List<byte[]> data = new ArrayList<byte[]>();
+	List<byte[]> data = new ArrayList<>();
 	
 	public void addBytes(byte[] bytes) {
 		data.add(bytes);

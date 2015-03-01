@@ -2,9 +2,8 @@ package com.trendrr.nsq.frames;
 
 public abstract class NSQFrame {
 
-	int size;
-	int frameId;
-	byte[] data;
+	private int size;
+	private byte[] data;
 	
 	
 	public static NSQFrame instance(int type) {
@@ -25,12 +24,6 @@ public abstract class NSQFrame {
 	}
 	public void setSize(int size) {
 		this.size = size;
-	}
-	public int getFrameId() {
-		return frameId;
-	}
-	public void setFrameId(int frameId) {
-		this.frameId = frameId;
 	}
 	public byte[] getData() {
 		return data;

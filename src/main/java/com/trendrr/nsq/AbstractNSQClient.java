@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.trendrr.nsq;
 
 import java.net.InetAddress;
@@ -13,7 +10,7 @@ import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import com.trendrr.nsq.netty.NSQHandler;
+import com.trendrr.nsq.netty.NSQClientInitializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -21,17 +18,13 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 
 import com.trendrr.nsq.exceptions.NoConnectionsException;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.logging.log4j.LogManager;
 
 
 /**
  * Base class for producer and consumer
- *
- * @author Dustin Norlander
- * @created Jan 22, 2013
- *
  */
 public abstract class AbstractNSQClient {
 
@@ -92,15 +85,12 @@ public abstract class AbstractNSQClient {
 	 * use this if you want to specify your own netty executors. by default will use
 	 *
 	 * Executors.newCachedThreadPool()
-	 *
-	 * @param boss
-	 * @param worker
 	 */
-	public synchronized void setNettyExecutors(Executor boss, Executor worker) {
-
+	public synchronized void setNettyExecutors() {
 		bootstrap = new Bootstrap();
         bootstrap.group(new NioEventLoopGroup());
-        bootstrap.handler(new NSQHandler());
+        bootstrap.channel(NioSocketChannel.class);
+        bootstrap.handler(new NSQClientInitializer());
 	}
 
 	/**
@@ -129,6 +119,7 @@ public abstract class AbstractNSQClient {
         ByteBuf buf = Unpooled.buffer();
 		buf.writeBytes(MAGIC_PROTOCOL_VERSION);
 		channel.write(buf);
+        channel.flush();
 
 		//indentify
 		try {
@@ -156,8 +147,7 @@ public abstract class AbstractNSQClient {
 	protected synchronized void connect() {
 		if (this.bootstrap == null) {
 			//create default bootstrap
-			this.setNettyExecutors(Executors.newCachedThreadPool(),
-					Executors.newCachedThreadPool());
+			this.setNettyExecutors();
 		}
 
 		List<ConnectionAddress> addresses = this.lookupAddresses();

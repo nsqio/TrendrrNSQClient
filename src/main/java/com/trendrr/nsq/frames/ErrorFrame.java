@@ -6,13 +6,9 @@ import org.apache.logging.log4j.LogManager;
 
 public class ErrorFrame extends NSQFrame {
 
-	public ErrorFrame() {
-		this.frameId = 1;
-	}
-	
 	public String getErrorMessage() {
 		try {
-			return new String(this.data, "utf8");
+			return new String(getData(), "utf8");
 		} catch (UnsupportedEncodingException e) {
             LogManager.getLogger(this).error("Caught", e);
 		}
@@ -20,6 +16,6 @@ public class ErrorFrame extends NSQFrame {
 	}
 	
 	public String toString() {
-		return this.getErrorMessage();
+		return getErrorMessage();
 	}
 }

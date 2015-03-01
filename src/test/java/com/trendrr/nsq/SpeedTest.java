@@ -9,13 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 
-import com.trendrr.nsq.BatchCallback;
-import com.trendrr.nsq.NSQMessageCallback;
-import com.trendrr.nsq.NSQConsumer;
-import com.trendrr.nsq.NSQLookup;
-import com.trendrr.nsq.NSQMessage;
-import com.trendrr.nsq.NSQProducer;
-import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
+import com.trendrr.nsq.lookup.NSQLookup;
 
 
 /**
@@ -52,7 +46,7 @@ public class SpeedTest {
 		final Date start = new Date();
 		final AtomicInteger processed = new AtomicInteger(0);
 		
-		NSQLookup lookup = new NSQLookupDynMapImpl();
+		NSQLookup lookup = new NSQLookup();
         lookup.addAddr("localhost", 4161);
 		
 

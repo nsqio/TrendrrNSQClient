@@ -34,8 +34,8 @@ public class Connection {
     public static final AttributeKey<Connection> STATE =
             AttributeKey.valueOf("Connection.state");
 
-	LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<NSQCommand>(1);
-	LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<NSQFrame>(1);
+	LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<>(1);
+	LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<>(1);
 
 
 	public Connection(String host, int port, Channel channel, AbstractNSQClient client) {
@@ -144,10 +144,7 @@ public class Connection {
 		return heartbeats;
 	}
 
-	/**
-	 * Do not use this, only here until server implements producer heartbeats.
-	 */
-	public synchronized void _setLastHeartbeat() {
+	protected synchronized void setLastHeartbeat() {
 		this.lastHeartbeat = new Date();
 	}
 
@@ -231,7 +228,7 @@ public class Connection {
 	 * @return
 	 */
 	public ChannelFuture command(NSQCommand command) {
-        return this.channel.write(command);
+        return this.channel.writeAndFlush(command);
 	}
 
 	public String toString() {

@@ -12,7 +12,6 @@ public class NSQEncoder extends MessageToMessageEncoder<NSQCommand> {
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, NSQCommand message, List<Object> out) throws Exception {
-
 		ByteBuf buf = Unpooled.buffer();
 		buf.writeBytes(message.getLine().getBytes("utf8"));
 		

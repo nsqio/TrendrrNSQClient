@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.common.collect.Maps;
 import com.trendrr.nsq.exceptions.NoConnectionsException;
 import org.apache.logging.log4j.LogManager;
 
@@ -13,9 +14,8 @@ import org.apache.logging.log4j.LogManager;
  *
  */
 public class Connections {
-
-	protected HashMap<String, List<Connection>> connections = new HashMap<String, List<Connection>>();
-	protected List<Connection> connectionList = new ArrayList<Connection>();
+	protected HashMap<String, List<Connection>> connections = Maps.newHashMap();
+	protected List<Connection> connectionList = new ArrayList<>();
 	protected long rrCount = 0;
 	
 	public synchronized void addConnection(Connection connection) {

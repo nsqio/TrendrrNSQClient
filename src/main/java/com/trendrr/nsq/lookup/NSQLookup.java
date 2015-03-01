@@ -4,22 +4,18 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.Sets;
 import com.trendrr.nsq.ConnectionAddress;
-import com.trendrr.nsq.NSQLookup;
 
-public class NSQLookupDynMapImpl implements NSQLookup {
+public class NSQLookup {
+	Set<String> addresses = Sets.newHashSet();
 
-
-	Set<String> addresses = new HashSet<> ();
-	
-	
 	public void addAddr(String addr, int port) {
 		if (!addr.startsWith("http")) {
 			addr = "http://" + addr;
@@ -36,7 +32,7 @@ public class NSQLookupDynMapImpl implements NSQLookup {
 
             JsonNode jsonNode = mapper.readTree(new URL(addr + "/lookup?topic=" + topic));
             JsonNode producers = jsonNode.get("data").get("producers");
-            for (JsonNode node : ((ArrayNode)producers)) {
+            for (JsonNode node : producers) {
 				String host = node.get("address").asText();
 				String key =  host + ":" + node.get("tcp_port").asText();
 				ConnectionAddress address = new ConnectionAddress();

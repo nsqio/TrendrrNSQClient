@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.trendrr.nsq;
 
 import java.util.ArrayList;
@@ -16,13 +13,8 @@ import com.trendrr.nsq.exceptions.NoConnectionsException;
 import com.trendrr.nsq.frames.ErrorFrame;
 import com.trendrr.nsq.frames.NSQFrame;
 import com.trendrr.nsq.frames.ResponseFrame;
+import sun.plugin.dom.exception.InvalidStateException;
 
-
-/**
- * @author Dustin Norlander
- * @created Jan 22, 2013
- *
- */
 public class NSQProducer extends AbstractNSQClient {
 	List<ConnectionAddress> addresses = new ArrayList<ConnectionAddress>();
 
@@ -70,7 +62,7 @@ public class NSQProducer extends AbstractNSQClient {
 		if (messages.isEmpty())
 			return;
 		try {
-			this.produceMulti(batch.getTopic(), messages);
+			produceMulti(batch.getTopic(), messages);
 			//success!
 			batch.getCallback().batchSuccess(batch.getTopic(), messages.size());
 		} catch (Exception x) {
@@ -131,12 +123,6 @@ public class NSQProducer extends AbstractNSQClient {
 
 	/**
 	 * produce multiple messages.
-	 * @param topic
-	 * @param message
-	 * @throws DisconnectedException
-	 * @throws BadTopicException
-	 * @throws BadMessageException
-	 * @throws NoConnectionsException
 	 */
 	public void produceMulti(String topic, List<byte[]> message) throws DisconnectedException, BadTopicException, BadMessageException, NoConnectionsException{
 		if (message == null || message.isEmpty()) {
@@ -157,7 +143,7 @@ public class NSQProducer extends AbstractNSQClient {
 
 		NSQFrame frame = c.commandAndWait(command);
 		if (frame instanceof ResponseFrame) {
-			c._setLastHeartbeat(); //TODO: remove once producer server heartbeats in place.
+			c.setLastHeartbeat(); //TODO: remove once producer server heartbeats in place.
 			return;
 		}
 		if (frame instanceof ErrorFrame) {
@@ -176,17 +162,15 @@ public class NSQProducer extends AbstractNSQClient {
 	}
 
 	/**
-	 * @param topic
-	 * @param message
 	 * @throws NoConnectionsException
 	 */
 	public void produce(String topic, byte[] message) throws DisconnectedException, BadTopicException, BadMessageException, NoConnectionsException{
-		Connection c = this.getConn();
+		Connection c = getConn();
 
 		NSQCommand command = NSQCommand.instance("PUB " + topic, message);
 		NSQFrame frame = c.commandAndWait(command);
 		if (frame instanceof ResponseFrame) {
-			c._setLastHeartbeat(); //TODO: remove once server heartbeats in place.
+			c.setLastHeartbeat(); //TODO: remove once server heartbeats in place.
 			return;
 		}
 		if (frame instanceof ErrorFrame) {
@@ -207,9 +191,6 @@ public class NSQProducer extends AbstractNSQClient {
 
 	/**
 	 * Adds a new connection.
-	 * @param host
-	 * @param port
-	 * @param poolsize
 	 */
 	public synchronized NSQProducer addAddress(String host, int port, int poolsize) {
 		ConnectionAddress addr = new ConnectionAddress();
@@ -222,13 +203,10 @@ public class NSQProducer extends AbstractNSQClient {
 
 	@Override
 	public void close() {
-		this.flushBatches();
+		flushBatches();
 		super.close();
 	}
 
-	/* (non-Javadoc)
-	 * @see com.trendrr.nsq.AbstractNSQClient#lookupAddresses()
-	 */
 	@Override
 	public synchronized List<ConnectionAddress> lookupAddresses() {
 		return this.addresses;

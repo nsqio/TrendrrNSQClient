@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ReplayingDecoder;
 
-
 import com.trendrr.nsq.frames.NSQFrame;
 
 import java.util.List;
@@ -35,19 +34,20 @@ public class NSQDecoder extends ReplayingDecoder<NSQDecoder.MyDecoderState>{
 	       break;
 	     case READ_FRAME_ID:
 	    	 int id = in.readInt();
-	    	 this.frame = NSQFrame.instance(id);
-	    	 if (this.frame == null) {
+	    	 frame = NSQFrame.instance(id);
+	    	 if (frame == null) {
 	    		 //uhh, bad response from server..  what should we do?
 	    		 throw new Exception("Bad frame id from server (" + id + ").  disconnect!");
 	    	 }
-	    	 this.frame.setSize(size);
+	    	 frame.setSize(size);
 	    	 checkpoint(MyDecoderState.READ_DATA);
 	    	 break;
 	     case READ_DATA:
 	    	 ByteBuf bytes = in.readBytes(frame.getSize()-4); //subtract 4 because the frame id is included
-	    	 this.frame.setData(bytes.array());
+	    	 frame.setData(bytes.array());
 	    	 checkpoint(MyDecoderState.READ_SIZE);
-	    	 out.add(this.frame);
+	    	 out.add(frame);
+             break;
 	     default:
 	       throw new Error("Shouldn't reach here.");
 	     }

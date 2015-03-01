@@ -6,8 +6,12 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.trendrr.nsq.exceptions.BadMessageException;
+import com.trendrr.nsq.exceptions.BadTopicException;
+import com.trendrr.nsq.exceptions.DisconnectedException;
+import com.trendrr.nsq.exceptions.NoConnectionsException;
 import org.apache.logging.log4j.LogManager;
-import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;
+import com.trendrr.nsq.lookup.NSQLookup;
 
 public class ExampleMain {
 
@@ -21,33 +25,30 @@ public class ExampleMain {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);		
+		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);
 		producer.start();
 		start = new Date();
 		String msg = randomString();
 		
-//		try {
-//			producer.produce("test3", msg.getBytes());
-//			System.out.println("PRODUCE 1");
-//
-//			
+		try {
+			producer.produce("test3", msg.getBytes());
+			System.out.println("PRODUCE 1");
+            producer.close();
+
+
 //			List<byte[]> messages = new ArrayList<byte[]>();
 //			messages.add(msg.getBytes());
-//			
+//
 //			producer.produceMulti("test3", messages);
 //			if (true) {
 //				System.exit(1);
 //			}
-//			
-//		} catch (DisconnectedException e1) {
-//			log.error("Caught", e1);
-//		} catch (BadTopicException e1) {
-//			log.error("Caught", e1);
-//		} catch (BadMessageException e1) {
-//			log.error("Caught", e1);
-//		}
-		
-		
+
+		} catch (DisconnectedException | BadTopicException | BadMessageException | NoConnectionsException e) {
+			LogManager.getLogger(ExampleMain.class).error("Caught", e);
+        }
+
+        System.exit(0);
 //
 //		for (int i=0; i < 50000; i++) {
 //			if (i % 1000 == 0) {
@@ -83,7 +84,7 @@ public class ExampleMain {
 		if (true)
 			return;
 		
-        NSQLookup lookup = new NSQLookupDynMapImpl();
+        NSQLookup lookup = new NSQLookup();
         lookup.addAddr("localhost", 4161);
 		
 		start = new Date();
