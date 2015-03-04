@@ -187,7 +187,6 @@ public class Connection {
 			log.error("Caught", x);
 		}
 		log.warn("Close called on connection: " + this);
-		this._disconnected();
 	}
 
 	/**
