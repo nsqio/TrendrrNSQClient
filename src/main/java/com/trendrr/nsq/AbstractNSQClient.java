@@ -12,6 +12,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -53,7 +54,7 @@ public abstract class AbstractNSQClient {
 	protected Timer timer = null;
 
 	//this executor is where the callback code is handled
-	protected Executor executor = Executors.newSingleThreadExecutor();
+	protected ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	/**
 	 * connects, ready to produce.
@@ -83,11 +84,11 @@ public abstract class AbstractNSQClient {
 	 * this is the executor where the callbacks happen.  default is a new cached threadpool.
 	 * @param executor
 	 */
-	public synchronized void setExecutor(Executor executor) {
+	public synchronized void setExecutor(ExecutorService executor) {
 		this.executor = executor;
 	}
 
-	public Executor getExecutor() {
+	public ExecutorService getExecutor() {
 		return this.executor;
 	}
 
@@ -217,6 +218,6 @@ public abstract class AbstractNSQClient {
 		this.timer.cancel();
 		this.connections.close();
 		this.bootstrap.releaseExternalResources();
-
+    this.executor.shutdown();
 	}
 }
