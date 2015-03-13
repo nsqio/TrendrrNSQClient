@@ -78,7 +78,7 @@ for (int i=0; i < iterations; i++) {
 * [slf4j][slf4j]
 * [trendrr-oss][trendrr-oss]
 
-Note: the trendrr-oss dependancy can easily be swapped out by implementing the com.trendrr.nsq.NSQLookup interface using a different json parser
+Note: the trendrr-oss dependancy can easily be swapped out by implementing the com.trendrr.nsq.lookup.NSQLookup interface using a different json parser
 
 
 [nsq]: https://github.com/bitly/nsq

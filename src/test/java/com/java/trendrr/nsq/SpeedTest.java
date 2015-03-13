@@ -1,4 +1,4 @@
-/**
+package com.java.trendrr.nsq; /**
  * 
  */
 
@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.trendrr.nsq.BatchCallback;
 import com.trendrr.nsq.NSQMessageCallback;
 import com.trendrr.nsq.NSQConsumer;
-import com.trendrr.nsq.NSQLookup;
+import com.trendrr.nsq.lookup.NSQLookup;
 import com.trendrr.nsq.NSQMessage;
 import com.trendrr.nsq.NSQProducer;
 import com.trendrr.nsq.lookup.NSQLookupDynMapImpl;

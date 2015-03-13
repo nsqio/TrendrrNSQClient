@@ -35,29 +35,27 @@ import com.trendrr.nsq.netty.NSQPipeline;
  */
 public abstract class AbstractNSQClient {
 
-	protected static Logger log = LoggerFactory.getLogger(AbstractNSQClient.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNSQClient.class);
 
+    private static final int CLEAN_UP_FREQUENCY = 1000 * 60 * 2;
 
 	/**
 	 * Protocol version sent to nsqd on initial connect
 	 */
-	public static byte[] MAGIC_PROTOCOL_VERSION = "  V2".getBytes();
+	private static byte[] MAGIC_PROTOCOL_VERSION = "  V2".getBytes();
+    private volatile long lookupPeriod = 60 * 1000; //how often to recheck for new nodes (and clean up non responsive nodes)
 
-	private int messagesPerBatch = 200;
-	private long lookupPeriod = 60 * 1000; // how often to recheck for new nodes (and clean up non responsive nodes)
-
-
-	Connections connections = new Connections();
+    private int messagesPerBatch = 200;
+	private final Connections connections = new Connections();
 	// Configure the client.
-	protected ClientBootstrap bootstrap = null;
-	protected Timer timer = null;
+    private ClientBootstrap bootstrap = null;
+    private Timer timer = null;
 
-	//this executor is where the callback code is handled
-	protected Executor executor = Executors.newSingleThreadExecutor();
+    
+    //this executor is where the callback code is handled
+    protected Executor executor = Executors.newSingleThreadExecutor();
 
-	/**
-	 * connects, ready to produce.
-	 */
+
 	public synchronized void start() {
 		this.connect();
 
@@ -65,6 +63,8 @@ public abstract class AbstractNSQClient {
 			timer.cancel();
 		}
 		timer = new Timer();
+
+        //TODO Use a scheduled executor service instead of a timer here
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
@@ -113,28 +113,27 @@ public abstract class AbstractNSQClient {
 	 * Handles connection and sending magic protocol
 	 * @param address
 	 * @param port
-	 * @return
+	 * @return the created connection; <strong>null</strong> if no connection could be created
 	 */
 	protected Connection createConnection(String address, int port) {
-
 		// Start the connection attempt.
-		ChannelFuture future = bootstrap.connect(new InetSocketAddress(address, port));
+        ChannelFuture future = bootstrap.connect(new InetSocketAddress(address, port));
 
-		// Wait until the connection attempt succeeds or fails.
-		Channel channel = future.awaitUninterruptibly().getChannel();
-		if (!future.isSuccess()) {
-		    log.error("Caught", future.getCause());
-		    return null;
-		}
-		log.info("Creating connection: " + address + " : " + port);
-		Connection conn = new Connection(address, port, channel, this);
-		conn.setMessagesPerBatch(this.messagesPerBatch);
+        // Wait until the connection attempt succeeds or fails.
+        Channel channel = future.awaitUninterruptibly().getChannel();
+        if (!future.isSuccess()) {
+            LOGGER.error("Unable to create connection, caught: ", future.getCause());
+            return null;
+        }
 
-		ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
-		buf.writeBytes(MAGIC_PROTOCOL_VERSION);
-		channel.write(buf);
-
-		//indentify
+        LOGGER.info("Creating connection: " + address + " : " + port);
+        Connection conn = new Connection(address, port, channel, this);
+        conn.setMessagesPerBatch(this.messagesPerBatch);
+        ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
+        buf.writeBytes(MAGIC_PROTOCOL_VERSION);
+        channel.write(buf);
+        
+        //indentify
 		try {
 			String identJson = "{" +
 					"\"short_id\":\"" + InetAddress.getLocalHost().getHostName() + "\"" +
@@ -145,7 +144,7 @@ public abstract class AbstractNSQClient {
 			conn.command(ident);
 
 		} catch (UnknownHostException e) {
-			log.error("Caught", e);
+			LOGGER.error("Caught", e);
 		}
 
 		return conn;
@@ -168,10 +167,11 @@ public abstract class AbstractNSQClient {
 
 
 		for (ConnectionAddress addr : addresses ) {
-			int num = addr.getPoolsize() - this.connections.connectionSize(addr.getHost(), addr.getPort());
+			int num = addr.getPoolsize() - connections.connectionSize(addr.getHost(), addr.getPort());
 			for (int i=0; i < num; i++) {
-				Connection conn = this.createConnection(addr.getHost(), addr.getPort());
-				this.connections.addConnection(conn);
+			    Connection conn = createConnection(addr.getHost(), addr.getPort());
+				connections.addConnection(conn);
+
 			}
 			//TODO: handle negative num? (i.e. if user lowered the poolsize we should kill some connections)
 		}
@@ -179,22 +179,26 @@ public abstract class AbstractNSQClient {
 	}
 
 	/**
-	 * will run through and remove any connections that have not recieved a ping in the last 2 minutes.
+	 * will run through and remove any connections that have not recieved a ping in the last N milliseconds
 	 */
 	public synchronized void cleanupOldConnections() {
-		Date cutoff = new Date(new Date().getTime() - (1000*60*2));
+        Date cutoff = new Date(new Date().getTime() - CLEAN_UP_FREQUENCY);
 		try {
 			for (Connection c : this.connections.getConnections()) {
 				if (cutoff.after(c.getLastHeartbeat())) {
-					log.warn("Removing dead connection: " + c.getHost() + ":" + c.getPort());
+					LOGGER.warn("Removing dead connection [host={}, port={}]", c.getHost(), c.getPort());
 					c.close();
 					connections.remove(c);
 				}
 			}
 		} catch (NoConnectionsException e) {
-			//ignore
+			//ignore - TODO: is it a good idea to swallow this exception?
 		}
 	}
+
+    public Connections getConnections(){
+        return connections;
+    }
 
 	public void setMessagesPerBatch(int messagesPerBatch) {
 		this.messagesPerBatch = messagesPerBatch;
@@ -209,7 +213,7 @@ public abstract class AbstractNSQClient {
 	 * @param connection
 	 */
 	public synchronized void _disconnected(Connection connection) {
-		log.warn("Disconnected!" + connection);
+		LOGGER.warn("Client disconnected [connection={}]", connection);
 		this.connections.remove(connection);
 	}
 
@@ -217,6 +221,5 @@ public abstract class AbstractNSQClient {
 		this.timer.cancel();
 		this.connections.close();
 		this.bootstrap.releaseExternalResources();
-
 	}
 }

@@ -5,6 +5,7 @@ package com.trendrr.nsq;
 
 import java.util.List;
 
+import com.trendrr.nsq.lookup.NSQLookup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NSQConsumer extends AbstractNSQClient {
 
-	protected static Logger log = LoggerFactory.getLogger(NSQConsumer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(NSQConsumer.class);
 	
 	NSQLookup lookup;
 	String topic = null;
@@ -34,17 +35,31 @@ public class NSQConsumer extends AbstractNSQClient {
 	
 	@Override
 	protected Connection createConnection(String address, int port) {
-		Connection conn = super.createConnection(address, port);
-		
-		conn.setCallback(callback);
+	    Connection conn = super.createConnection(address, port);
+        return addCommands(conn);
+	}
+
+    /**
+     * Adds all required commands to a subscriber connection
+     * @param conn the connection
+     * @return the passed connection
+     */
+    protected Connection addCommands(Connection conn){
+        if(conn == null){
+            //Connection could be null here
+            LOGGER.error("Connection returned is null - cannot go further");
+            return null;
+        }
+
+        conn.setCallback(callback);
 		/*
 		 * subscribe
 		 */
-		conn.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
-		conn.command(NSQCommand.instance("RDY " + conn.getMessagesPerBatch()));
-		return conn;
-		
-	}
+        conn.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
+        conn.command(NSQCommand.instance("RDY " + conn.getMessagesPerBatch()));
+        return conn;
+    }
+
 	/* (non-Javadoc)
 	 * @see com.trendrr.nsq.AbstractNSQClient#lookupAddresses()
 	 */

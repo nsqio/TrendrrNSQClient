@@ -1,15 +1,13 @@
-package com.trendrr.nsq;
-/**
- * 
- */
+package com.trendrr.nsq.lookup;
 
+import com.trendrr.nsq.ConnectionAddress;
 
 import java.util.List;
 
 
 /**
  * An interface to the nsq lookup.  We keep this as an interface because it depends on 
- * some json parsing library and we dont want to force a dependancy on a specific lib. 
+ * some json parsing library and we don't want to force a dependency on a specific lib.
  * 
  * 
  * @author Dustin Norlander
@@ -27,7 +25,7 @@ public interface NSQLookup {
 	/**
 	 * Lookup topic addresses
 	 * @param topic
-	 * @return
+	 * @return the list of nsq servers where this topic is available
 	 */
 	public List<ConnectionAddress> lookup(String topic);
 }

@@ -29,24 +29,23 @@ import com.trendrr.nsq.frames.ResponseFrame;
  *
  */
 public class Connection {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Connection.class);
 
-	protected static Logger log = LoggerFactory.getLogger(Connection.class);
+	private Channel channel;
+	private int heartbeats = 0;
+	private Date lastHeartbeat = new Date();
 
-	Channel channel;
-	int heartbeats = 0;
-	Date lastHeartbeat = new Date();
+	private NSQMessageCallback callback = null;
+	private AtomicLong totalMessages = new AtomicLong(0l);
+	private int messagesPerBatch = 200;
 
-	NSQMessageCallback callback = null;
-	AtomicLong totalMessages = new AtomicLong(0l);
-	int messagesPerBatch = 200;
+	private AbstractNSQClient client = null;
 
-	AbstractNSQClient client = null;
+	private String host = null;
+	private int port;
 
-	String host = null;
-	int port;
-
-	LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<NSQCommand>(1);
-	LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<NSQFrame>(1);
+	private LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<NSQCommand>(1);
+	private LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<NSQFrame>(1);
 
 
 	public Connection(String host, int port, Channel channel, AbstractNSQClient client) {
@@ -94,7 +93,7 @@ public class Connection {
 					try {
 						this.responses.offer(frame, 20, TimeUnit.SECONDS);
 					} catch (InterruptedException e) {
-						log.error("Incoming frame error", e);
+                        LOGGER.error("Incoming frame error", e);
 						//TODO: what to do here? we should probably disconnect!
 						this.close();
 					}
@@ -123,19 +122,20 @@ public class Connection {
 			message.setMessage(msg.getMessageBody());
 			message.setTimestamp(new Date(TimeUnit.NANOSECONDS.toMillis(msg.getTimestamp())));
 			if (this.callback == null) {
-				log.warn("NO CAllback, dropping message: " + message);
+                LOGGER.warn("NO Callback, dropping message: " + message);
 			} else {
 				this.callback.message(message);
 			}
 			return;
 		}
 
-		log.warn("Unknown frame type: " + frame);
+        LOGGER.warn("Unknown frame type: " + frame);
 	}
 
 
 	void heartbeat() {
-		log.info("HEARTBEAT!");
+        // This should be logged at debug level - it's more useful for troubleshooting and should not interfere with actual INFO logs
+        LOGGER.debug("HEARTBEAT!");
 		this.heartbeats++;
 		this.lastHeartbeat = new Date();
 		//send NOP here.
@@ -184,9 +184,9 @@ public class Connection {
 		try {
 			channel.close().await(10000);
 		} catch (Exception x) {
-			log.error("Caught", x);
+			LOGGER.error("Caught", x);
 		}
-		log.warn("Close called on connection: " + this);
+		LOGGER.warn("Close called on connection: " + this);
 		this._disconnected();
 	}
 

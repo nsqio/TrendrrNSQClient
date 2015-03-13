@@ -1,4 +1,4 @@
-package com.trendrr.nsq;
+package com.java.trendrr.nsq;
 /**
  * 
  */
@@ -9,6 +9,11 @@ import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.trendrr.nsq.NSQConsumer;
+import com.trendrr.nsq.NSQMessage;
+import com.trendrr.nsq.NSQMessageCallback;
+import com.trendrr.nsq.NSQProducer;
+import com.trendrr.nsq.lookup.NSQLookup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +41,7 @@ public class ExampleMain {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);		
+		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);
 		producer.start();
 		start = new Date();
 		String msg = StringHelper.randomString(10);
