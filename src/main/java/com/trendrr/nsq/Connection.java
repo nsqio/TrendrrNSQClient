@@ -104,7 +104,11 @@ public class Connection {
 		}
 
 		if (frame instanceof ErrorFrame) {
-			this.responses.add(frame);
+			try {
+				this.responses.offer(frame, 1, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				log.error("Dropping incoming frame error", e);
+			}
 			return;
 		}
 
