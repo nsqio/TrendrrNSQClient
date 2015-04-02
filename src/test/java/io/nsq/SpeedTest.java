@@ -83,8 +83,8 @@ public class SpeedTest {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer producer = new NSQProducer().addAddress(address, port, poolsize);
-        producer.configureBatch("speedtest",
+		NSQProducer producer = new NSQProducer().addAddress(address, port);
+		producer.configureBatch("speedtest",
                 batchsize,
 			null, //use default maxbytes 
 			null //use default max seconds

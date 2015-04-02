@@ -7,17 +7,17 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.nsq.exceptions.NoConnectionsException;
 import io.nsq.netty.NSQClientInitializer;
 import org.apache.logging.log4j.LogManager;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -31,45 +31,52 @@ public abstract class AbstractNSQClient {
 	private int messagesPerBatch = 200;
 	private long lookupPeriod = 60 * 1000; // how often to recheck for new nodes (and clean up non responsive nodes)
 
-    protected Connections connections = new Connections();
-    private Bootstrap bootstrap = null;
+	protected Map<ServerAddress, Connection> connections = new ConcurrentHashMap<>();
+	private Bootstrap bootstrap = null;
     private Timer timer = null;
-    private Executor executor = Executors.newSingleThreadExecutor();
+	private Executor executor = Executors.newCachedThreadPool();
+
+	private volatile boolean started = false;
 
 	/**
 	 * connects, ready to produce.
 	 */
-	public synchronized void start() {
-		this.connect();
-
-		if (timer != null) {
-			timer.cancel();
+	public void start() {
+		if (!started) {
+			started = true;
+			initNetty();
+			//connect once otherwise we might have to wait one lookupPeriod
+			connect();
+			timer = new Timer();
+			timer.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					connect();
+				}
+			}, lookupPeriod, lookupPeriod);
 		}
-		timer = new Timer();
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				connect();
-			}
-		}, lookupPeriod, lookupPeriod);
 	}
 
 	/**
 	 * Should return a list of all the addresses that we should be currently connected to.
 	 * @return
 	 */
-	public abstract List<ConnectionAddress> lookupAddresses();
+	public abstract List<ServerAddress> lookupAddresses();
 
 	/**
-	 * this is the executor where the callbacks happen.  default is a new cached threadpool.
+	 * This is the executor where the callbacks happen.
+	 * The executer can only changed before the client is started.
+	 * Default is a cached threadpool.
 	 * @param executor
 	 */
-	public synchronized void setExecutor(Executor executor) {
-		this.executor = executor;
+	public void setExecutor(Executor executor) {
+		if (!started) {
+			this.executor = executor;
+		}
 	}
 
-	public Executor getExecutor() {
-		return this.executor;
+	protected Executor getExecutor() {
+		return executor;
 	}
 
 	/**
@@ -77,7 +84,7 @@ public abstract class AbstractNSQClient {
 	 *
 	 * Executors.newCachedThreadPool()
 	 */
-	public synchronized void setNettyExecutors() {
+	public void initNetty() {
 		bootstrap = new Bootstrap();
         bootstrap.group(new NioEventLoopGroup());
         bootstrap.channel(NioSocketChannel.class);
@@ -88,14 +95,13 @@ public abstract class AbstractNSQClient {
 	 * Creates a new connection object.
 	 *
 	 * Handles connection and sending magic protocol
-	 * @param address
-	 * @param port
-	 * @return
+	 * @param serverAddress of a nsqd server
+	 * @return connection to a nsqd server
 	 */
-	protected Connection createConnection(String address, int port) {
+	protected Connection createConnection(ServerAddress serverAddress) {
 
 		// Start the connection attempt.
-		ChannelFuture future = bootstrap.connect(new InetSocketAddress(address, port));
+		ChannelFuture future = bootstrap.connect(new InetSocketAddress(serverAddress.getHost(), serverAddress.getPort()));
 
 		// Wait until the connection attempt succeeds or fails.
 		Channel channel = future.awaitUninterruptibly().channel();
@@ -103,8 +109,8 @@ public abstract class AbstractNSQClient {
             LogManager.getLogger(this).error("Caught", future.cause());
 		    return null;
 		}
-        LogManager.getLogger(this).info("Creating connection: " + address + " : " + port);
-		Connection conn = new Connection(address, port, channel, this);
+		LogManager.getLogger(this).info("Creating connection: " + serverAddress.toString());
+		Connection conn = new Connection(serverAddress, channel, this);
 		conn.setMessagesPerBatch(this.messagesPerBatch);
 
         ByteBuf buf = Unpooled.buffer();
@@ -123,75 +129,45 @@ public abstract class AbstractNSQClient {
 			conn.command(ident);
 
 		} catch (UnknownHostException e) {
-            LogManager.getLogger(this).error("Caught", e);
+			LogManager.getLogger(this).error("Local host name could not resolved", e);
+			conn.close();
+			connections.remove(serverAddress);
+			return null;
 		}
 
 		return conn;
 	}
 
-	/**
-	 *
-	 * Connects and subscribes to the requested topic and channel.
-	 *
-	 * safe to call repeatedly for node discovery.
-	 */
 	protected synchronized void connect() {
-        if (bootstrap == null) {
-            //create default bootstrap
-            setNettyExecutors();
-        }
+		List<ServerAddress> addresses = lookupAddresses();
 
-        List<ConnectionAddress> addresses = lookupAddresses();
-
-
-		for (ConnectionAddress addr : addresses ) {
-            int num = addr.getPoolsize() - connections.connectionSize(addr.getHost(), addr.getPort());
-            for (int i=0; i < num; i++) {
-                Connection conn = createConnection(addr.getHost(), addr.getPort());
-                connections.addConnection(conn);
-            }
-			//TODO: handle negative num? (i.e. if user lowered the poolsize we should kill some connections)
-		}
-        cleanupOldConnections();
-    }
-
-	/**
-	 * will run through and remove any connections that have not recieved a ping in the last 2 minutes.
-	 */
-	public synchronized void cleanupOldConnections() {
-		Date cutoff = new Date(new Date().getTime() - (1000*60*2));
-		try {
-			for (Connection c : this.connections.getConnections()) {
-				if (cutoff.after(c.getLastHeartbeat())) {
-                    LogManager.getLogger(this).warn("Removing dead connection: " + c.getHost() + ":" + c.getPort());
-					c.close();
-					connections.remove(c);
+		for (ServerAddress addr : addresses) {
+			if (!connections.containsKey(addr)) {
+				Connection conn = createConnection(addr);
+				if (conn != null) {
+					connections.putIfAbsent(addr, conn);
 				}
 			}
-		} catch (NoConnectionsException e) {
-			//ignore
 		}
-	}
+    }
 
 	public void setMessagesPerBatch(int messagesPerBatch) {
 		this.messagesPerBatch = messagesPerBatch;
 	}
 
 	public void setLookupPeriod(long periodMillis) {
-		this.lookupPeriod = periodMillis;
+		if (!started) {
+			this.lookupPeriod = periodMillis;
+		}
 	}
 
-	/**
-	 * for internal use.  called when a connection is disconnected
-	 * @param connection
-	 */
-	public synchronized void _disconnected(Connection connection) {
-        LogManager.getLogger(this).warn("Disconnected!" + connection);
-		this.connections.remove(connection);
+	protected long getLookupPeriod() {
+		return lookupPeriod;
 	}
 
 	public void close() {
+		connections.values().forEach((con) -> con.close());
+		connections.clear();
 		this.timer.cancel();
-		this.connections.close();
 	}
 }

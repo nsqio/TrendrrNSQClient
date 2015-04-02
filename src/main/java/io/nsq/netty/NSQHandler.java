@@ -13,8 +13,8 @@ public class NSQHandler extends SimpleChannelInboundHandler<NSQFrame> {
         super.channelInactive(ctx);
         Connection connection = ctx.channel().attr(Connection.STATE).get();
         if(connection != null) {
-            LogManager.getLogger(this).error("Channel disconnected! " + connection);
-            connection._disconnected();
+            LogManager.getLogger(this).info("Channel disconnected! " + connection);
+            connection.deregister();
         } else {
             LogManager.getLogger(this).error("No connection set for : " + ctx.channel());
         }
@@ -28,8 +28,8 @@ public class NSQHandler extends SimpleChannelInboundHandler<NSQFrame> {
 		ctx.channel().close();
 		Connection con = ctx.channel().attr(Connection.STATE).get();
 		if (con != null) {
-			con._disconnected();
-		} else {
+            con.close();
+        } else {
 			LogManager.getLogger(this).warn("No connection set for : " + ctx.channel());
 		}
 	}
@@ -38,7 +38,7 @@ public class NSQHandler extends SimpleChannelInboundHandler<NSQFrame> {
     protected void channelRead0(ChannelHandlerContext ctx, NSQFrame msg) throws Exception {
         final Connection con = ctx.channel().attr(Connection.STATE).get();
         if (con != null) {
-            con.getParent().getExecutor().execute( () -> con.incoming(msg) );
+            con.getExecutor().execute(() -> con.incoming(msg));
         } else {
             LogManager.getLogger(this).warn("No connection set for : " + ctx.channel());
         }

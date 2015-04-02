@@ -2,10 +2,10 @@ package io.nsq;
 
 import io.nsq.exceptions.BadMessageException;
 import io.nsq.exceptions.BadTopicException;
+import io.nsq.exceptions.NSQException;
 import io.nsq.exceptions.NoConnectionsException;
 import io.nsq.frames.ErrorFrame;
 import io.nsq.frames.NSQFrame;
-import io.nsq.frames.ResponseFrame;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
@@ -14,9 +14,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
 public class NSQProducer extends AbstractNSQClient {
-    private List<ConnectionAddress> addresses = new ArrayList<ConnectionAddress>();
+	private List<ServerAddress> addresses = new ArrayList<>();
+	private ConcurrentHashMap<String, Batch> batches = new ConcurrentHashMap<>();
 
-    private ConcurrentHashMap<String, Batch> batches = new ConcurrentHashMap<String, Batch>();
+	private int roundRobinCount = 0;
 
 	/**
 	 * If no connections are available, will try this many times with 5 second pause between, before throwing a
@@ -84,30 +85,29 @@ public class NSQProducer extends AbstractNSQClient {
 	}
 
 
-	protected synchronized Connection getConn() throws NoConnectionsException {
-		NoConnectionsException ex = new NoConnectionsException("no connections", null);
-		for (int i=0; i < this.connectionRetries; i++) {
+	//TODO: fixme get random connection
+	protected Connection getConnection() throws NoConnectionsException {
+		int i = 0;
+		while (i < connectionRetries) {
+			Connection[] connections = this.connections.values().toArray(new Connection[]{});
+			if (connections.length != 0) {
+				return connections[roundRobinCount++ % connections.length];
+			}
+			LogManager.getLogger(this).debug("No Connections found, waiting ...");
 			try {
-				return this.connections.next();
-			} catch (NoConnectionsException x) {
-				ex = x;
-				try {
-					Thread.sleep(5*1000);
-				} catch (InterruptedException e) {}
-				//try to reconnect..
-                LogManager.getLogger(this).warn("Attempting to reconnect");
-				this.connect();
+				Thread.sleep(getLookupPeriod());
+			} catch (InterruptedException e) {
+				throw new NoConnectionsException("Could not acquire a connection to a server", e);
 			}
 		}
-        LogManager.getLogger(this).warn("Could not get a new connection within " + (this.connectionRetries * 5) + " seconds. giving up..");
-		throw ex;
+		throw new NoConnectionsException("Could not acquire a connection to a server");
 	}
 
 	/**
 	 * produce multiple messages.
 	 */
-    public void produceMulti(String topic, List<byte[]> messages) throws TimeoutException, BadTopicException, BadMessageException, NoConnectionsException {
-        if (messages == null || messages.isEmpty()) {
+	public void produceMulti(String topic, List<byte[]> messages) throws TimeoutException, NSQException {
+		if (messages == null || messages.isEmpty()) {
             return;
 		}
 
@@ -117,17 +117,13 @@ public class NSQProducer extends AbstractNSQClient {
             return;
 		}
 
-		Connection c = this.getConn();
+		Connection c = this.getConnection();
 
 		NSQCommand command = NSQCommand.instance("MPUB " + topic);
         command.setData(messages);
 
 
 		NSQFrame frame = c.commandAndWait(command);
-		if (frame instanceof ResponseFrame) {
-			c.setLastHeartbeat(); //TODO: remove once producer server heartbeats in place.
-			return;
-		}
 		if (frame instanceof ErrorFrame) {
 			String err = ((ErrorFrame)frame).getErrorMessage();
 			if (err.startsWith("E_BAD_TOPIC")) {
@@ -141,18 +137,11 @@ public class NSQProducer extends AbstractNSQClient {
 		c.close();
 	}
 
-	/**
-	 * @throws NoConnectionsException
-	 */
-    public void produce(String topic, byte[] message) throws BadTopicException, BadMessageException, NoConnectionsException, TimeoutException {
-        Connection c = getConn();
+	public void produce(String topic, byte[] message) throws NSQException, TimeoutException {
+		Connection c = getConnection();
 
 		NSQCommand command = NSQCommand.instance("PUB " + topic, message);
 		NSQFrame frame = c.commandAndWait(command);
-		if (frame instanceof ResponseFrame) {
-			c.setLastHeartbeat(); //TODO: remove once server heartbeats in place.
-			return;
-		}
 		if (frame instanceof ErrorFrame) {
 			String err = ((ErrorFrame)frame).getErrorMessage();
 			if (err.startsWith("E_BAD_TOPIC")) {
@@ -162,16 +151,11 @@ public class NSQProducer extends AbstractNSQClient {
 				throw new BadMessageException(err);
 			}
 		}
-		//disconnect
-		c.close();
 	}
 
-	public synchronized NSQProducer addAddress(String host, int port, int poolsize) {
-		ConnectionAddress addr = new ConnectionAddress();
-		addr.setHost(host);
-		addr.setPoolsize(poolsize);
-		addr.setPort(port);
-		this.addresses.add(addr);
+	public NSQProducer addAddress(String host, int port) {
+		ServerAddress addr = new ServerAddress(host, port);
+		addresses.add(addr);
 		return this;
 	}
 
@@ -182,7 +166,7 @@ public class NSQProducer extends AbstractNSQClient {
 	}
 
 	@Override
-	public synchronized List<ConnectionAddress> lookupAddresses() {
+	public List<ServerAddress> lookupAddresses() {
 		return this.addresses;
 	}
 }

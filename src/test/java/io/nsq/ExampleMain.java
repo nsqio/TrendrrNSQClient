@@ -1,9 +1,7 @@
 package io.nsq;
 
 import io.nsq.callbacks.NSQMessageCallback;
-import io.nsq.exceptions.BadMessageException;
-import io.nsq.exceptions.BadTopicException;
-import io.nsq.exceptions.NoConnectionsException;
+import io.nsq.exceptions.NSQException;
 import io.nsq.lookup.NSQLookup;
 import org.apache.logging.log4j.LogManager;
 
@@ -26,7 +24,7 @@ public class ExampleMain {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);
+		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150);
 		producer.start();
 		start = new Date();
 		String msg = randomString();
@@ -45,11 +43,10 @@ public class ExampleMain {
 //				System.exit(1);
 //			}
 
-        } catch (TimeoutException | BadTopicException | BadMessageException | NoConnectionsException e) {
-            LogManager.getLogger(ExampleMain.class).error("Caught", e);
+		} catch (TimeoutException | NSQException e) {
+			LogManager.getLogger(ExampleMain.class).error("Caught", e);
         }
-
-        System.exit(0);
+		System.exit(0);
 //
 //		for (int i=0; i < 50000; i++) {
 //			if (i % 1000 == 0) {

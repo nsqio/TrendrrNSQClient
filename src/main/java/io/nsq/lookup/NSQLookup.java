@@ -3,7 +3,7 @@ package io.nsq.lookup;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
-import io.nsq.ConnectionAddress;
+import io.nsq.ServerAddress;
 
 import java.io.IOException;
 import java.net.URL;
@@ -22,9 +22,9 @@ public class NSQLookup {
 		addr = addr + ":" + port;
 		this.addresses.add(addr);
 	}
-	
-	public List<ConnectionAddress> lookup(String topic) throws IOException {
-		HashMap<String, ConnectionAddress> addresses = new HashMap<>();
+
+	public List<ServerAddress> lookup(String topic) throws IOException {
+		HashMap<String, ServerAddress> addresses = new HashMap<>();
 		
 		for (String addr : this.addresses) {
             ObjectMapper mapper = new ObjectMapper();
@@ -34,9 +34,7 @@ public class NSQLookup {
             for (JsonNode node : producers) {
                 String host = node.get("broadcast_address").asText();
                 String key =  host + ":" + node.get("tcp_port").asText();
-				ConnectionAddress address = new ConnectionAddress();
-				address.setHost(host);
-				address.setPort(node.get("tcp_port").asInt());
+				ServerAddress address = new ServerAddress(host, node.get("tcp_port").asInt());
 				addresses.put(key, address);
 			}
 		}

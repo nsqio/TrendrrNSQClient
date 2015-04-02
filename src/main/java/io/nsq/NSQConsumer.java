@@ -35,15 +35,16 @@ public class NSQConsumer extends AbstractNSQClient {
     }
 
     @Override
-	protected Connection createConnection(String address, int port) {
-        connection = super.createConnection(address, port);
+    protected Connection createConnection(ServerAddress serverAddress) {
+        connection = super.createConnection(serverAddress);
+        if (connection != null) {
+            connection.setMessageCallback(callback);
+            connection.setErrorCallback(errorCallback);
 
-        connection.setMessageCallback(callback);
-        connection.setErrorCallback(errorCallback);
-
-        connection.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
-        connection.command(NSQCommand.instance("RDY " + connection.getMessagesPerBatch()));
-		return connection;
+            connection.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
+            connection.command(NSQCommand.instance("RDY " + connection.getMessagesPerBatch()));
+        }
+        return connection;
 	}
 
     @Override
@@ -63,12 +64,12 @@ public class NSQConsumer extends AbstractNSQClient {
                 }
             }
         } catch (TimeoutException e) {
-            LogManager.getLogger().warn("No clean disconnect", e);
+            LogManager.getLogger(this).warn("No clean disconnect", e);
         }
     }
 
 	@Override
-	public List<ConnectionAddress> lookupAddresses() {
+    public List<ServerAddress> lookupAddresses() {
         try {
             return lookup.lookup(topic);
         } catch (IOException e) {

@@ -19,10 +19,11 @@ public class NSQProducerTest {
         NSQLookup lookup = new NSQLookup();
         lookup.addAddr("localhost", 4161);
 
-        NSQProducer producer = new NSQProducer().addAddress("localhost", 4150, 1);
+        NSQProducer producer = new NSQProducer().addAddress("localhost", 4150);
         producer.start();
         String msg = randomString();
         producer.produce("test3", msg.getBytes());
+        producer.close();
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
             LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));

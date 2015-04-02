@@ -1,10 +1,17 @@
-## TrendrrNSQClient
+## JavaNSQClient
 
-A fast netty-based java client for [NSQ][nsq] initially developed and maintained by [@dustismo](https://github.com/dustismo)
-for use in various places in the trendrr.tv and curatorr.com stacks.
+A fast netty-based java client for [NSQ][nsq]
 
-**I ([@mreiferson](https://github.com/mreiferson)) am currently maintaining this repo to facilitate
-bug fixes and minor updates and am interested in finding a longer-tem maintainer.**
+## Notes:
+
+X connection per Consumer and X connections per Producer where X is the nummer of how many nsqds the user
+wants to connect.
+
+Next check consummer
+batch command
+auth
+snappy
+....
 
 ## Consumer
 
