@@ -32,11 +32,12 @@ public class NSQProducer {
      */
     private int connectionRetries = 5;
 
-    public void start() {
+    public NSQProducer start() {
         if (!started) {
             createPool();
             started = true;
         }
+        return this;
     }
 
     private void createPool() {
@@ -70,6 +71,9 @@ public class NSQProducer {
      * produce multiple messages.
      */
     public void produceMulti(String topic, List<byte[]> messages) throws TimeoutException, NSQException {
+        if (!started) {
+            throw new IllegalStateException("Producer must be started before producing messages!");
+        }
         if (messages == null || messages.isEmpty()) {
             return;
         }
@@ -81,24 +85,30 @@ public class NSQProducer {
         }
 
         Connection c = this.getConnection();
+        try {
+            NSQCommand command = NSQCommand.instance("MPUB " + topic);
+            command.setData(messages);
 
-        NSQCommand command = NSQCommand.instance("MPUB " + topic);
-        command.setData(messages);
 
-
-        NSQFrame frame = c.commandAndWait(command);
-        if (frame instanceof ErrorFrame) {
-            String err = ((ErrorFrame) frame).getErrorMessage();
-            if (err.startsWith("E_BAD_TOPIC")) {
-                throw new BadTopicException(err);
+            NSQFrame frame = c.commandAndWait(command);
+            if (frame instanceof ErrorFrame) {
+                String err = ((ErrorFrame) frame).getErrorMessage();
+                if (err.startsWith("E_BAD_TOPIC")) {
+                    throw new BadTopicException(err);
+                }
+                if (err.startsWith("E_BAD_MESSAGE")) {
+                    throw new BadMessageException(err);
+                }
             }
-            if (err.startsWith("E_BAD_MESSAGE")) {
-                throw new BadMessageException(err);
-            }
+        } finally {
+            pool.returnObject(c.getServerAddress(), c);
         }
     }
 
     public void produce(String topic, byte[] message) throws NSQException, TimeoutException {
+        if (!started) {
+            throw new IllegalStateException("Producer must be started before producing messages!");
+        }
         Connection c = getConnection();
         try {
             NSQCommand command = NSQCommand.instance("PUB " + topic, message);
@@ -117,18 +127,21 @@ public class NSQProducer {
         }
     }
 
-    public void addAddress(String host, int port) {
+    public NSQProducer addAddress(String host, int port) {
         addresses.add(new ServerAddress(host, port));
+        return this;
     }
 
-    public void removeAddress(String host, int port) {
+    public NSQProducer removeAddress(String host, int port) {
         addresses.remove(new ServerAddress(host, port));
+        return this;
     }
 
-    public void setPoolConfig(GenericKeyedObjectPoolConfig poolConfig) {
+    public NSQProducer setPoolConfig(GenericKeyedObjectPoolConfig poolConfig) {
         if (!started) {
             this.poolConfig = poolConfig;
         }
+        return this;
     }
 
     /**
@@ -138,10 +151,11 @@ public class NSQProducer {
      *
      * @param executor
      */
-    public void setExecutor(ExecutorService executor) {
+    public NSQProducer setExecutor(ExecutorService executor) {
         if (!started) {
             this.executor = executor;
         }
+        return this;
     }
 
     protected ExecutorService getExecutor() {

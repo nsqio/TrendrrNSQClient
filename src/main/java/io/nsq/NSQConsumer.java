@@ -49,7 +49,7 @@ public class NSQConsumer {
         this.errorCallback = errCallback;
     }
 
-    public void start() {
+    public NSQConsumer start() {
         if (!started) {
             started = true;
             //connect once otherwise we might have to wait one lookupPeriod
@@ -62,6 +62,7 @@ public class NSQConsumer {
                 }
             }, lookupPeriod, lookupPeriod);
         }
+        return this;
     }
 
     private Connection createConnection(ServerAddress serverAddress) {
@@ -102,14 +103,18 @@ public class NSQConsumer {
         }
     }
 
-    public void setMessagesPerBatch(int messagesPerBatch) {
-        this.messagesPerBatch = messagesPerBatch;
+    public NSQConsumer setMessagesPerBatch(int messagesPerBatch) {
+        if (!started) {
+            this.messagesPerBatch = messagesPerBatch;
+        }
+        return this;
     }
 
-    public void setLookupPeriod(long periodMillis) {
+    public NSQConsumer setLookupPeriod(long periodMillis) {
         if (!started) {
             this.lookupPeriod = periodMillis;
         }
+        return this;
     }
 
 
@@ -140,10 +145,11 @@ public class NSQConsumer {
      *
      * @param executor
      */
-    public void setExecutor(ExecutorService executor) {
+    public NSQConsumer setExecutor(ExecutorService executor) {
         if (!started) {
             this.executor = executor;
         }
+        return this;
     }
 
     private Set<ServerAddress> lookupAddresses() {
