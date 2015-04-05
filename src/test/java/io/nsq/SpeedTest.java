@@ -83,12 +83,8 @@ public class SpeedTest {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer producer = new NSQProducer().addAddress(address, port);
-		producer.configureBatch("speedtest",
-                batchsize,
-			null, //use default maxbytes 
-			null //use default max seconds
-		);
+		NSQProducer producer = new NSQProducer();
+		producer.addAddress(address, port);
 		
 		
 		producer.start();
@@ -106,12 +102,12 @@ public class SpeedTest {
 			if (i % 1000 == 0) {
 				System.out.println("produced: " + i);
 			}
-			producer.produceBatch("speedtest", msg);
+			//producer.produceBatch("speedtest", msg);
 		}
 		
 //		My System does this in about 10 seconds, so 5k messages per second on a single connection
 		System.out.println("Produced " + iterations +" batch messages in " + (new Date().getTime()-start.getTime()) + " millis");
-		
-		producer.close();
+
+		producer.shutdown();
 	}
 }

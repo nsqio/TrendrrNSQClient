@@ -24,7 +24,8 @@ public class ExampleMain {
 		 * PRODUCER.  produce 50k messages
 		 */
 		//producer
-		NSQProducer producer = new NSQProducer().addAddress("localhost", 4150);
+		NSQProducer producer = new NSQProducer();
+		producer.addAddress("localhost", 4150);
 		producer.start();
 		start = new Date();
 		String msg = randomString();
@@ -32,7 +33,7 @@ public class ExampleMain {
 		try {
 			producer.produce("test3", msg.getBytes());
 			System.out.println("PRODUCE 1");
-            producer.close();
+			producer.shutdown();
 
 
 //			List<byte[]> messages = new ArrayList<byte[]>();
@@ -65,15 +66,7 @@ public class ExampleMain {
 //		
 ////		My System does this in about 10 seconds, so 5k messages per second on a single connection
 //		System.out.println("Produced 50k messages in " + (new Date().getTime()-start.getTime()) + " millis");
-//		
-		
-		start = new Date();
-		for (int i=0; i < 50000; i++) {
-			if (i % 1000 == 0) {
-				System.out.println("producer: " + i);
-			}
-			producer.produceBatch("speedtest2", (msg + i).getBytes("utf8"));
-		}
+//
 		
 //		My System does this in about 10 seconds, so 5k messages per second on a single connection
 		System.out.println("Produced 50k batch messages in " + (new Date().getTime()-start.getTime()) + " millis");

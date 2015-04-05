@@ -7,9 +7,6 @@ import io.nsq.ServerAddress;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 
 public class NSQLookup {
@@ -23,8 +20,8 @@ public class NSQLookup {
 		this.addresses.add(addr);
 	}
 
-	public List<ServerAddress> lookup(String topic) throws IOException {
-		HashMap<String, ServerAddress> addresses = new HashMap<>();
+	public Set<ServerAddress> lookup(String topic) throws IOException {
+		Set<ServerAddress> addresses = Sets.newHashSet();
 		
 		for (String addr : this.addresses) {
             ObjectMapper mapper = new ObjectMapper();
@@ -33,11 +30,10 @@ public class NSQLookup {
             JsonNode producers = jsonNode.get("data").get("producers");
             for (JsonNode node : producers) {
                 String host = node.get("broadcast_address").asText();
-                String key =  host + ":" + node.get("tcp_port").asText();
 				ServerAddress address = new ServerAddress(host, node.get("tcp_port").asInt());
-				addresses.put(key, address);
+				addresses.add(address);
 			}
 		}
-		return new ArrayList<>(addresses.values());
+		return addresses;
 	}
 }

@@ -1,7 +1,9 @@
 package io.nsq.callbacks;
 
+import io.nsq.exceptions.NSQException;
+
 @FunctionalInterface
 public interface NSQErrorCallback {
 
-    public void error(Exception x);
+    void error(NSQException x);
 }

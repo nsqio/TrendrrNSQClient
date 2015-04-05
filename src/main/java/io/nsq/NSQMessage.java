@@ -7,11 +7,11 @@ import java.util.Date;
 
 public class NSQMessage {
 
-    protected byte[] id;
-    protected int attempts;
-    protected Date timestamp;
-    protected byte[] message;
-    protected Connection connection;
+    private byte[] id;
+    private int attempts;
+    private Date timestamp;
+    private byte[] message;
+    private Connection connection;
 
     /**
      * Finished processing this message, let nsq know so it doesnt get reprocessed.
@@ -20,7 +20,7 @@ public class NSQMessage {
         try {
             this.connection.command(NSQCommand.instance("FIN " + new String(id, "ascii")));
         } catch (UnsupportedEncodingException e) {
-            LogManager.getLogger(this).error("Caught", e);
+            LogManager.getLogger(this).error("ASCII charset is not supported by your JVM?", e);
         }
     }
 
@@ -31,7 +31,7 @@ public class NSQMessage {
         try {
             this.connection.command(NSQCommand.instance("REQ " + new String(id, "ascii") + " " + timeoutMillis));
         } catch (UnsupportedEncodingException e) {
-            LogManager.getLogger(this).error("Caught", e);
+            LogManager.getLogger(this).error("ASCII charset is not supported by your JVM?", e);
         }
     }
 

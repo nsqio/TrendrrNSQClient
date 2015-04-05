@@ -19,11 +19,12 @@ public class NSQProducerTest {
         NSQLookup lookup = new NSQLookup();
         lookup.addAddr("localhost", 4161);
 
-        NSQProducer producer = new NSQProducer().addAddress("localhost", 4150);
+        NSQProducer producer = new NSQProducer();
+        producer.addAddress("localhost", 4150);
         producer.start();
         String msg = randomString();
         producer.produce("test3", msg.getBytes());
-        producer.close();
+        producer.shutdown();
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
             LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
@@ -35,7 +36,36 @@ public class NSQProducerTest {
             Thread.sleep(500);
         }
         assertEquals(1, counter.get());
-        consumer.close();
+        consumer.shutdown();
+    }
+
+    @Test
+    public void testProduceMoreMsg() throws NSQException, TimeoutException, InterruptedException {
+        AtomicInteger counter = new AtomicInteger(0);
+        NSQLookup lookup = new NSQLookup();
+        lookup.addAddr("localhost", 4161);
+
+        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
+            LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
+            counter.incrementAndGet();
+            message.finished();
+        });
+        consumer.start();
+
+        NSQProducer producer = new NSQProducer();
+        producer.addAddress("localhost", 4150);
+        producer.start();
+        for (int i = 0; i < 1000; i++) {
+            String msg = randomString();
+            producer.produce("test3", msg.getBytes());
+        }
+        producer.shutdown();
+
+        while (counter.get() < 1000) {
+            Thread.sleep(500);
+        }
+        assertEquals(1000, counter.get());
+        consumer.shutdown();
     }
 
     private String randomString() {

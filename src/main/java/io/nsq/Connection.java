@@ -1,45 +1,92 @@
 package io.nsq;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import io.nsq.callbacks.NSQErrorCallback;
 import io.nsq.callbacks.NSQMessageCallback;
+import io.nsq.exceptions.NSQException;
+import io.nsq.exceptions.NoConnectionsException;
 import io.nsq.frames.ErrorFrame;
 import io.nsq.frames.MessageFrame;
 import io.nsq.frames.NSQFrame;
 import io.nsq.frames.ResponseFrame;
+import io.nsq.netty.NSQClientInitializer;
 import org.apache.logging.log4j.LogManager;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.Date;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Connection {
+    public static byte[] MAGIC_PROTOCOL_VERSION = "  V2".getBytes();
     public static final AttributeKey<Connection> STATE =
             AttributeKey.valueOf("Connection.state");
-    private AbstractNSQClient client;
+    private ExecutorService executor;
     private ServerAddress address;
     private Channel channel;
     private NSQMessageCallback callback = null;
+    private NSQErrorCallback errorCallback = null;
     private AtomicLong totalMessages = new AtomicLong(0l);
     private int messagesPerBatch = 200;
     private LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<>(1);
     private LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<>(1);
 
 
-    public Connection(final ServerAddress address, final Channel channel, final AbstractNSQClient client) {
-        this.channel = channel;
+    public Connection(final ServerAddress serverAddress, ExecutorService executor) throws NoConnectionsException {
+        this.address = serverAddress;
+        this.executor = executor;
+        Bootstrap bootstrap = new Bootstrap();
+        bootstrap.group(new NioEventLoopGroup());
+        bootstrap.channel(NioSocketChannel.class);
+        bootstrap.handler(new NSQClientInitializer());
+        // Start the connection attempt.
+        ChannelFuture future = bootstrap.connect(new InetSocketAddress(serverAddress.getHost(),
+                serverAddress.getPort()));
+
+        // Wait until the connection attempt succeeds or fails.
+        channel = future.awaitUninterruptibly().channel();
+        if (!future.isSuccess()) {
+            throw new NoConnectionsException("Could not connect to server", future.cause());
+        }
+        LogManager.getLogger(this).info("Created connection: " + serverAddress.toString());
         this.channel.attr(STATE).set(this);
-        this.client = client;
-        this.address = address;
+        ByteBuf buf = Unpooled.buffer();
+        buf.writeBytes(MAGIC_PROTOCOL_VERSION);
+        channel.write(buf);
+        channel.flush();
+
+        //indentify
+        try {
+            String identJson = "{" +
+                    "\"short_id\":\"" + InetAddress.getLocalHost().getHostName() + "\"" +
+                    "," +
+                    "\"long_id\":\"" + InetAddress.getLocalHost().getCanonicalHostName() + "\"" +
+                    "}";
+            NSQCommand ident = NSQCommand.instance("IDENTIFY", identJson.getBytes());
+            command(ident);
+
+        } catch (UnknownHostException e) {
+            LogManager.getLogger(this).error("Local host name could not resolved", e);
+            close();
+            throw new NoConnectionsException("Could not create connection");
+        }
+    }
+
+    public boolean isConnected() {
+        return channel.isActive();
     }
 
     public Executor getExecutor() {
-        return client.getExecutor();
+        return executor;
     }
 
     public boolean isRequestInProgress() {
@@ -73,6 +120,9 @@ public class Connection {
         }
 
         if (frame instanceof ErrorFrame) {
+            if (errorCallback != null) {
+                errorCallback.error(NSQException.of((ErrorFrame) frame));
+            }
             responses.add(frame);
             return;
         }
@@ -92,7 +142,7 @@ public class Connection {
             message.setMessage(msg.getMessageBody());
             message.setTimestamp(new Date(TimeUnit.NANOSECONDS.toMillis(msg.getTimestamp())));
             if (callback == null) {
-                LogManager.getLogger(this).warn("NO CAllback, dropping message: " + message);
+                LogManager.getLogger(this).warn("NO Callback, dropping message: " + message);
             } else {
                 callback.message(message);
             }
@@ -105,7 +155,6 @@ public class Connection {
 
     void heartbeat() {
         LogManager.getLogger(this).info("HEARTBEAT!");
-        //send NOP here.
         command(NSQCommand.instance("NOP"));
     }
 
@@ -118,7 +167,7 @@ public class Connection {
     }
 
     public void setErrorCallback(NSQErrorCallback callback) {
-
+        errorCallback = callback;
     }
 
     public void close() {
@@ -157,8 +206,7 @@ public class Connection {
         return channel.writeAndFlush(command);
     }
 
-    public void deregister() {
-        client.connections.remove(address);
+    public ServerAddress getServerAddress() {
+        return address;
     }
-
 }

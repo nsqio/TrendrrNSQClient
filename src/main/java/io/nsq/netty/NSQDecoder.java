@@ -9,8 +9,7 @@ import java.util.List;
 
 public class NSQDecoder extends ReplayingDecoder<NSQDecoder.MyDecoderState>{
 
-
-	public static enum MyDecoderState {
+	public enum MyDecoderState {
 		READ_SIZE,
 		READ_FRAME_ID,
 		READ_DATA

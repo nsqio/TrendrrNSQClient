@@ -7,8 +7,7 @@ A fast netty-based java client for [NSQ][nsq]
 X connection per Consumer and X connections per Producer where X is the nummer of how many nsqds the user
 wants to connect.
 
-Next check consummer
-batch command
+## TODO:
 auth
 snappy
 ....

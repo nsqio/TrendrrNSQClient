@@ -14,7 +14,6 @@ public class NSQHandler extends SimpleChannelInboundHandler<NSQFrame> {
         Connection connection = ctx.channel().attr(Connection.STATE).get();
         if(connection != null) {
             LogManager.getLogger(this).info("Channel disconnected! " + connection);
-            connection.deregister();
         } else {
             LogManager.getLogger(this).error("No connection set for : " + ctx.channel());
         }
