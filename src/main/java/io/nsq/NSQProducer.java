@@ -25,6 +25,7 @@ public class NSQProducer {
     private ExecutorService executor = Executors.newCachedThreadPool();
     private GenericKeyedObjectPoolConfig poolConfig = null;
     private GenericKeyedObjectPool<ServerAddress, Connection> pool;
+    private NSQConfig config = new NSQConfig();
 
     /**
      * If no connections are available, will try this many times with 5 second pause between, before throwing a
@@ -46,7 +47,7 @@ public class NSQProducer {
             poolConfig.setTestOnBorrow(true);
             poolConfig.setJmxEnabled(false);
         }
-        pool = new GenericKeyedObjectPool<>(new ConnectionPoolFactory(getExecutor()), poolConfig);
+        pool = new GenericKeyedObjectPool<>(new ConnectionPoolFactory(config, getExecutor()), poolConfig);
     }
 
     protected Connection getConnection() throws NoConnectionsException {
@@ -154,6 +155,13 @@ public class NSQProducer {
     public NSQProducer setExecutor(ExecutorService executor) {
         if (!started) {
             this.executor = executor;
+        }
+        return this;
+    }
+
+    public NSQProducer setConfig(NSQConfig config) {
+        if (!started) {
+            this.config = config;
         }
         return this;
     }

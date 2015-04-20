@@ -6,6 +6,7 @@ import io.nsq.Connection;
 import io.nsq.frames.NSQFrame;
 import org.apache.logging.log4j.LogManager;
 
+
 public class NSQHandler extends SimpleChannelInboundHandler<NSQFrame> {
 
     @Override

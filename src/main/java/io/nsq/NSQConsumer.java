@@ -25,6 +25,7 @@ public class NSQConsumer {
 	private String channel = null;
 	private NSQMessageCallback callback;
     private NSQErrorCallback errorCallback;
+    private NSQConfig config;
 
     private Timer timer;
     private ExecutorService executor = Executors.newCachedThreadPool();
@@ -37,15 +38,21 @@ public class NSQConsumer {
     private long lookupPeriod = 60 * 1000; // how often to recheck for new nodes (and clean up non responsive nodes)
 
     public NSQConsumer(NSQLookup lookup, String topic, String channel, NSQMessageCallback callback) {
-        this(lookup, topic, channel, callback, null);
+        this(lookup, topic, channel, callback, new NSQConfig());
     }
 
     public NSQConsumer(NSQLookup lookup, String topic, String channel, NSQMessageCallback callback,
-                       NSQErrorCallback errCallback) {
+                       NSQConfig config) {
+        this(lookup, topic, channel, callback, config, null);
+    }
+
+    public NSQConsumer(NSQLookup lookup, String topic, String channel, NSQMessageCallback callback,
+                       NSQConfig config, NSQErrorCallback errCallback) {
         this.lookup = lookup;
 		this.topic = topic;
 		this.channel = channel;
-		this.callback = callback;
+        this.config = config;
+        this.callback = callback;
         this.errorCallback = errCallback;
     }
 
@@ -67,7 +74,7 @@ public class NSQConsumer {
 
     private Connection createConnection(ServerAddress serverAddress) {
         try {
-            Connection connection = new Connection(serverAddress, executor);
+            Connection connection = new Connection(serverAddress, config, executor);
 
             connection.setMessageCallback(callback);
             connection.setErrorCallback(errorCallback);

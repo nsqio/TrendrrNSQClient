@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
@@ -19,9 +20,7 @@ import io.nsq.frames.ResponseFrame;
 import io.nsq.netty.NSQClientInitializer;
 import org.apache.logging.log4j.LogManager;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,13 +38,16 @@ public class Connection {
     private int messagesPerBatch = 200;
     private LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<>(1);
     private LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<>(1);
+    private static EventLoopGroup group = new NioEventLoopGroup();
+    private NSQConfig config;
 
 
-    public Connection(final ServerAddress serverAddress, ExecutorService executor) throws NoConnectionsException {
+    public Connection(final ServerAddress serverAddress, NSQConfig config, ExecutorService executor) throws NoConnectionsException {
         this.address = serverAddress;
         this.executor = executor;
+        this.config = config;
         Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(new NioEventLoopGroup());
+        bootstrap.group(group);
         bootstrap.channel(NioSocketChannel.class);
         bootstrap.handler(new NSQClientInitializer());
         // Start the connection attempt.
@@ -65,19 +67,13 @@ public class Connection {
         channel.flush();
 
         //indentify
+        NSQCommand ident = NSQCommand.instance("IDENTIFY", config.toString().getBytes());
         try {
-            String identJson = "{" +
-                    "\"short_id\":\"" + InetAddress.getLocalHost().getHostName() + "\"" +
-                    "," +
-                    "\"long_id\":\"" + InetAddress.getLocalHost().getCanonicalHostName() + "\"" +
-                    "}";
-            NSQCommand ident = NSQCommand.instance("IDENTIFY", identJson.getBytes());
-            command(ident);
-
-        } catch (UnknownHostException e) {
-            LogManager.getLogger(this).error("Local host name could not resolved", e);
+            NSQFrame response = commandAndWait(ident);
+            LogManager.getLogger(this).info("Server identification: " + ((ResponseFrame) response).getMessage());
+        } catch (TimeoutException e) {
+            LogManager.getLogger(this).error("Creating connection timed out", e);
             close();
-            throw new NoConnectionsException("Could not create connection");
         }
     }
 
@@ -111,7 +107,7 @@ public class Connection {
                     try {
                         responses.offer(frame, 20, TimeUnit.SECONDS);
                     } catch (InterruptedException e) {
-                        LogManager.getLogger(this).error("Incoming frame error", e);
+                        LogManager.getLogger(this).error("Thread was interruped, probably shuthing down", e);
                         close();
                     }
                 }
@@ -208,5 +204,9 @@ public class Connection {
 
     public ServerAddress getServerAddress() {
         return address;
+    }
+
+    public NSQConfig getConfig() {
+        return config;
     }
 }

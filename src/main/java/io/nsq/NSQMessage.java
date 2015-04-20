@@ -18,7 +18,7 @@ public class NSQMessage {
      */
     public void finished() {
         try {
-            this.connection.command(NSQCommand.instance("FIN " + new String(id, "ascii")));
+            connection.command(NSQCommand.instance("FIN " + new String(id, "ascii")));
         } catch (UnsupportedEncodingException e) {
             LogManager.getLogger(this).error("ASCII charset is not supported by your JVM?", e);
         }
@@ -29,7 +29,7 @@ public class NSQMessage {
      */
     public void requeue(int timeoutMillis) {
         try {
-            this.connection.command(NSQCommand.instance("REQ " + new String(id, "ascii") + " " + timeoutMillis));
+            connection.command(NSQCommand.instance("REQ " + new String(id, "ascii") + " " + timeoutMillis));
         } catch (UnsupportedEncodingException e) {
             LogManager.getLogger(this).error("ASCII charset is not supported by your JVM?", e);
         }
@@ -37,10 +37,6 @@ public class NSQMessage {
 
     public void requeue() {
         requeue(0);
-    }
-
-    public Connection getConnection() {
-        return connection;
     }
 
     public void setConnection(Connection connection) {
