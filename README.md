@@ -1,12 +1,11 @@
 ## JavaNSQClient
 
-A fast netty-based Java8 client for [NSQ][nsq] 
+A (fast?) netty-based Java8 client for [NSQ][nsq] 
 heavily forked of TrendrrNSQClient
 
 ## TODO:
 auth
 ssl
-snappy
 ....
 
 ## Consumer
