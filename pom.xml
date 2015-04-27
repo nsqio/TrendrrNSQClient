@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.brainlag.nsq</groupId>
+  <groupId>com.github.brainlag</groupId>
   <artifactId>nsq-client</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0.ALPHA</version>
 
   <name>JavaNSQClient</name>
   <description>Fast Java client for NSQ.</description>
@@ -87,6 +87,17 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.3</version>
+            <extensions>true</extensions>
+            <configuration>
+              <serverId>ossrh</serverId>
+              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
           </plugin>
         </plugins>
       </build>

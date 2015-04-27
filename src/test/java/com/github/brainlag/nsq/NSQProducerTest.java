@@ -2,6 +2,7 @@ package com.github.brainlag.nsq;
 
 import com.github.brainlag.nsq.exceptions.NSQException;
 import com.github.brainlag.nsq.lookup.NSQLookup;
+import com.google.common.base.Throwables;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Test;
 
@@ -10,6 +11,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class NSQProducerTest {
 
@@ -27,7 +29,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testProduceOneMsg() throws NSQException, TimeoutException, InterruptedException {
+    public void testProduceOneMsgSnappy() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new NSQLookup();
         lookup.addAddr("localhost", 4161);
@@ -106,7 +108,43 @@ public class NSQProducerTest {
         while (counter.get() < 1000) {
             Thread.sleep(500);
         }
-        assertEquals(1000, counter.get());
+        assertTrue(counter.get() >= 5000);
+        consumer.shutdown();
+    }
+
+    @Test
+    public void testParallelProducer() throws NSQException, TimeoutException, InterruptedException {
+        AtomicInteger counter = new AtomicInteger(0);
+        NSQLookup lookup = new NSQLookup();
+        lookup.addAddr("localhost", 4161);
+
+        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
+            LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
+            counter.incrementAndGet();
+            message.finished();
+        });
+        consumer.start();
+
+        for (int n = 0; n < 5; n++) {
+            new Thread(() -> {
+                NSQProducer producer = new NSQProducer();
+                producer.addAddress("localhost", 4150);
+                producer.start();
+                for (int i = 0; i < 1000; i++) {
+                    String msg = randomString();
+                    try {
+                        producer.produce("test3", msg.getBytes());
+                    } catch (NSQException | TimeoutException e) {
+                        Throwables.propagate(e);
+                    }
+                }
+                producer.shutdown();
+            }).start();
+        }
+        while (counter.get() < 5000) {
+            Thread.sleep(500);
+        }
+        assertEquals(5000, counter.get());
         consumer.shutdown();
     }
 
