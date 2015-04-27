@@ -3,10 +3,12 @@ package com.github.brainlag.nsq;
 import com.github.brainlag.nsq.exceptions.NSQException;
 import com.github.brainlag.nsq.lookup.NSQLookup;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -108,7 +110,7 @@ public class NSQProducerTest {
         while (counter.get() < 1000) {
             Thread.sleep(500);
         }
-        assertTrue(counter.get() >= 5000);
+        assertTrue(counter.get() >= 1000);
         consumer.shutdown();
     }
 
@@ -144,7 +146,37 @@ public class NSQProducerTest {
         while (counter.get() < 5000) {
             Thread.sleep(500);
         }
-        assertEquals(5000, counter.get());
+        assertTrue(counter.get() >= 5000);
+        consumer.shutdown();
+    }
+
+    @Test
+    public void testMulitMessage() throws NSQException, TimeoutException, InterruptedException {
+        AtomicInteger counter = new AtomicInteger(0);
+        NSQLookup lookup = new NSQLookup();
+        lookup.addAddr("localhost", 4161);
+
+        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
+            LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
+            counter.incrementAndGet();
+            message.finished();
+        });
+        consumer.start();
+
+        NSQProducer producer = new NSQProducer();
+        producer.addAddress("localhost", 4150);
+        producer.start();
+        List<byte[]> messages = Lists.newArrayList();
+        for (int i = 0; i < 50; i++) {
+            messages.add(randomString().getBytes());
+        }
+        producer.produceMulti("test3", messages);
+        producer.shutdown();
+
+        while (counter.get() < 50) {
+            Thread.sleep(500);
+        }
+        assertTrue(counter.get() >= 50);
         consumer.shutdown();
     }
 

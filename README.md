@@ -3,7 +3,7 @@
 A (fast?) netty-based Java8 client for [NSQ](https://nsq.io)
 heavily forked of TrendrrNSQClient.
 
-## Artefact
+## Artifact
 
 ```
 <dependency>
@@ -16,6 +16,9 @@ heavily forked of TrendrrNSQClient.
 ## TODO:
 * auth
 * ssl
+* backoff
+* more tests
+* better docu
 * ....
 
 ## Consumer
