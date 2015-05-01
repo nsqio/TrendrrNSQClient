@@ -1,6 +1,7 @@
 package com.github.brainlag.nsq;
 
 import com.github.brainlag.nsq.exceptions.NSQException;
+import com.github.brainlag.nsq.lookup.DefaultNSQLookup;
 import com.github.brainlag.nsq.lookup.NSQLookup;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -33,8 +34,8 @@ public class NSQProducerTest {
     @Test
     public void testProduceOneMsgSnappy() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new NSQLookup();
-        lookup.addAddr("localhost", 4161);
+        NSQLookup lookup = new DefaultNSQLookup();
+        lookup.addLookupAddress("localhost", 4161);
 
         NSQProducer producer = new NSQProducer();
         producer.setConfig(getSnappyConfig());
@@ -61,8 +62,8 @@ public class NSQProducerTest {
     public void testProduceOneMsgDeflate() throws NSQException, TimeoutException, InterruptedException {
         System.setProperty("io.netty.noJdkZlibDecoder", "false");
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new NSQLookup();
-        lookup.addAddr("localhost", 4161);
+        NSQLookup lookup = new DefaultNSQLookup();
+        lookup.addLookupAddress("localhost", 4161);
 
         NSQProducer producer = new NSQProducer();
         producer.setConfig(getDeflateConfig());
@@ -88,8 +89,8 @@ public class NSQProducerTest {
     @Test
     public void testProduceMoreMsg() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new NSQLookup();
-        lookup.addAddr("localhost", 4161);
+        NSQLookup lookup = new DefaultNSQLookup();
+        lookup.addLookupAddress("localhost", 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
             LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
@@ -117,8 +118,8 @@ public class NSQProducerTest {
     @Test
     public void testParallelProducer() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new NSQLookup();
-        lookup.addAddr("localhost", 4161);
+        NSQLookup lookup = new DefaultNSQLookup();
+        lookup.addLookupAddress("localhost", 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
             LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
@@ -153,8 +154,8 @@ public class NSQProducerTest {
     @Test
     public void testMulitMessage() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new NSQLookup();
-        lookup.addAddr("localhost", 4161);
+        NSQLookup lookup = new DefaultNSQLookup();
+        lookup.addLookupAddress("localhost", 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
             LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
