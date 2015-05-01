@@ -127,11 +127,11 @@ public class NSQProducerTest {
         });
         consumer.start();
 
+        NSQProducer producer = new NSQProducer();
+        producer.addAddress("localhost", 4150);
+        producer.start();
         for (int n = 0; n < 5; n++) {
             new Thread(() -> {
-                NSQProducer producer = new NSQProducer();
-                producer.addAddress("localhost", 4150);
-                producer.start();
                 for (int i = 0; i < 1000; i++) {
                     String msg = randomString();
                     try {
@@ -140,13 +140,13 @@ public class NSQProducerTest {
                         Throwables.propagate(e);
                     }
                 }
-                producer.shutdown();
             }).start();
         }
         while (counter.get() < 5000) {
             Thread.sleep(500);
         }
         assertTrue(counter.get() >= 5000);
+        producer.shutdown();
         consumer.shutdown();
     }
 
