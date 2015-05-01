@@ -8,7 +8,6 @@ import com.github.brainlag.nsq.frames.NSQFrame;
 import com.github.brainlag.nsq.lookup.NSQLookup;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
-import io.netty.bootstrap.Bootstrap;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
@@ -28,11 +27,9 @@ public class NSQConsumer {
 
     private Timer timer;
     private ExecutorService executor = Executors.newCachedThreadPool();
-    private Bootstrap bootstrap;
     private Map<ServerAddress, Connection> connections = Maps.newHashMap();
 
     private boolean started = false;
-
     private int messagesPerBatch = 200;
     private long lookupPeriod = 60 * 1000; // how often to recheck for new nodes (and clean up non responsive nodes)
 

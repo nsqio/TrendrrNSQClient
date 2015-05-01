@@ -26,17 +26,12 @@ public class NSQProducer {
     private GenericKeyedObjectPoolConfig poolConfig = null;
     private GenericKeyedObjectPool<ServerAddress, Connection> pool;
     private NSQConfig config = new NSQConfig();
-
-    /**
-     * If no connections are available, will try this many times with 5 second pause between, before throwing a
-     * no connections available exception.
-     */
     private int connectionRetries = 5;
 
     public NSQProducer start() {
         if (!started) {
-            createPool();
             started = true;
+            createPool();
         }
         return this;
     }
@@ -51,18 +46,21 @@ public class NSQProducer {
     }
 
     protected Connection getConnection() throws NoConnectionsException {
-        ServerAddress[] serverAddresses = addresses.toArray(new ServerAddress[addresses.size()]);
-        if (serverAddresses.length != 0) {
-            try {
-                return pool.borrowObject(serverAddresses[roundRobinCount++ % serverAddresses.length]);
-            } catch (NoSuchElementException e) {
+        int c = 0;
+        while (c < connectionRetries) {
+            ServerAddress[] serverAddresses = addresses.toArray(new ServerAddress[addresses.size()]);
+            if (serverAddresses.length != 0) {
                 try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ix) {
-                    throw new NoConnectionsException("Could not acquire a connection to a server", ix);
+                    return pool.borrowObject(serverAddresses[roundRobinCount++ % serverAddresses.length]);
+                } catch (NoSuchElementException e) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ix) {
+                        throw new NoConnectionsException("Could not acquire a connection to a server", ix);
+                    }
+                } catch (Exception ex) {
+                    throw new NoConnectionsException("Could not acquire a connection to a server", ex);
                 }
-            } catch (Exception ex) {
-                throw new NoConnectionsException("Could not acquire a connection to a server", ex);
             }
         }
         throw new IllegalStateException("No server configured for producer");
