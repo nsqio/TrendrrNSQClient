@@ -42,7 +42,7 @@ public class NSQProducer {
             poolConfig.setTestOnBorrow(true);
             poolConfig.setJmxEnabled(false);
         }
-        pool = new GenericKeyedObjectPool<>(new ConnectionPoolFactory(config, getExecutor()), poolConfig);
+        pool = new GenericKeyedObjectPool<>(new ConnectionPoolFactory(config), poolConfig);
     }
 
     protected Connection getConnection() throws NoConnectionsException {

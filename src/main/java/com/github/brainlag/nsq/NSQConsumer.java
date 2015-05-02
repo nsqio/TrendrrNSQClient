@@ -14,42 +14,45 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class NSQConsumer {
 
-	private NSQLookup lookup;
-	private String topic = null;
-	private String channel = null;
-	private NSQMessageCallback callback;
-    private NSQErrorCallback errorCallback;
-    private NSQConfig config;
-
-    private Timer timer;
-    private ExecutorService executor = Executors.newCachedThreadPool();
-    private Map<ServerAddress, Connection> connections = Maps.newHashMap();
+    private final NSQLookup lookup;
+    private final String topic;
+    private final String channel;
+    private final NSQMessageCallback callback;
+    private final NSQErrorCallback errorCallback;
+    private final NSQConfig config;
+    private final Timer timer = new Timer();
+    private final Map<ServerAddress, Connection> connections = Maps.newHashMap();
+    private final AtomicLong totalMessages = new AtomicLong(0l);
 
     private boolean started = false;
     private int messagesPerBatch = 200;
     private long lookupPeriod = 60 * 1000; // how often to recheck for new nodes (and clean up non responsive nodes)
+    private ExecutorService executor = Executors.newCachedThreadPool();
 
-    public NSQConsumer(NSQLookup lookup, String topic, String channel, NSQMessageCallback callback) {
+    public NSQConsumer(final NSQLookup lookup, final String topic, final String channel, final NSQMessageCallback callback) {
         this(lookup, topic, channel, callback, new NSQConfig());
     }
 
-    public NSQConsumer(NSQLookup lookup, String topic, String channel, NSQMessageCallback callback,
-                       NSQConfig config) {
+    public NSQConsumer(final NSQLookup lookup, final String topic, final String channel, final NSQMessageCallback callback,
+                       final NSQConfig config) {
         this(lookup, topic, channel, callback, config, null);
     }
 
-    public NSQConsumer(NSQLookup lookup, String topic, String channel, NSQMessageCallback callback,
-                       NSQConfig config, NSQErrorCallback errCallback) {
+    public NSQConsumer(final NSQLookup lookup, final String topic, final String channel, final NSQMessageCallback callback,
+                       final NSQConfig config, final NSQErrorCallback errCallback) {
         this.lookup = lookup;
-		this.topic = topic;
-		this.channel = channel;
+        this.topic = topic;
+        this.channel = channel;
         this.config = config;
         this.callback = callback;
         this.errorCallback = errCallback;
+
     }
 
     public NSQConsumer start() {
@@ -57,7 +60,6 @@ public class NSQConsumer {
             started = true;
             //connect once otherwise we might have to wait one lookupPeriod
             connect();
-            timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -68,21 +70,37 @@ public class NSQConsumer {
         return this;
     }
 
-    private Connection createConnection(ServerAddress serverAddress) {
+    private Connection createConnection(final ServerAddress serverAddress) {
         try {
-            Connection connection = new Connection(serverAddress, config, executor);
+            final Connection connection = new Connection(serverAddress, config);
 
-            connection.setMessageCallback(callback);
+            connection.setConsumer(this);
             connection.setErrorCallback(errorCallback);
             connection.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
-            connection.command(NSQCommand.instance("RDY " + connection.getMessagesPerBatch()));
-            connection.setMessagesPerBatch(messagesPerBatch);
+            connection.command(NSQCommand.instance("RDY " + messagesPerBatch));
 
             return connection;
-        } catch (NoConnectionsException e) {
+        } catch (final NoConnectionsException e) {
             return null;
         }
-	}
+    }
+
+    protected void processMessage(final NSQMessage message) {
+        if (callback == null) {
+            LogManager.getLogger(this).warn("NO Callback, dropping message: " + message);
+        } else {
+            try {
+                executor.execute(() -> callback.message(message));
+            } catch (RejectedExecutionException re) {
+
+            }
+        }
+        final long tot = totalMessages.incrementAndGet();
+        if (tot % messagesPerBatch > (messagesPerBatch / 2)) {
+            //request some more!
+            message.getConnection().command(NSQCommand.instance("RDY " + messagesPerBatch));
+        }
+    }
 
     public void shutdown() {
         this.timer.cancel();
@@ -90,30 +108,30 @@ public class NSQConsumer {
     }
 
     private void cleanClose() {
-        NSQCommand command = NSQCommand.instance("CLS");
+        final NSQCommand command = NSQCommand.instance("CLS");
         try {
-            for (Connection connection : connections.values()) {
-                NSQFrame frame = connection.commandAndWait(command);
+            for (final Connection connection : connections.values()) {
+                final NSQFrame frame = connection.commandAndWait(command);
                 if (frame instanceof ErrorFrame) {
-                    String err = ((ErrorFrame) frame).getErrorMessage();
+                    final String err = ((ErrorFrame) frame).getErrorMessage();
                     if (err.startsWith("E_INVALID")) {
                         throw new IllegalStateException(err);
                     }
                 }
             }
-        } catch (TimeoutException e) {
+        } catch (final TimeoutException e) {
             LogManager.getLogger(this).warn("No clean disconnect", e);
         }
     }
 
-    public NSQConsumer setMessagesPerBatch(int messagesPerBatch) {
+    public NSQConsumer setMessagesPerBatch(final int messagesPerBatch) {
         if (!started) {
             this.messagesPerBatch = messagesPerBatch;
         }
         return this;
     }
 
-    public NSQConsumer setLookupPeriod(long periodMillis) {
+    public NSQConsumer setLookupPeriod(final long periodMillis) {
         if (!started) {
             this.lookupPeriod = periodMillis;
         }
@@ -122,33 +140,35 @@ public class NSQConsumer {
 
 
     private void connect() {
-        Set<ServerAddress> newAddresses = lookupAddresses();
-        Set<ServerAddress> oldAddresses = connections.keySet();
+        final Set<ServerAddress> newAddresses = lookupAddresses();
+        final Set<ServerAddress> oldAddresses = connections.keySet();
         oldAddresses.removeAll(newAddresses);
-        for (ServerAddress server : oldAddresses) {
+        for (final ServerAddress server : oldAddresses) {
             connections.get(server).close();
             connections.remove(server);
         }
-        for (Iterator<Map.Entry<ServerAddress, Connection>> it = connections.entrySet().iterator(); it.hasNext(); ) {
+        for (final Iterator<Map.Entry<ServerAddress, Connection>> it = connections.entrySet().iterator(); it.hasNext(); ) {
             if (!it.next().getValue().isConnected()) {
                 it.remove();
             }
         }
-        for (ServerAddress server : newAddresses) {
+        for (final ServerAddress server : newAddresses) {
             if (!connections.containsKey(server)) {
                 connections.put(server, createConnection(server));
             }
         }
     }
 
+    public long getTotalMessages() {
+        return totalMessages.get();
+    }
+
     /**
      * This is the executor where the callbacks happen.
      * The executer can only changed before the client is started.
      * Default is a cached threadpool.
-     *
-     * @param executor
      */
-    public NSQConsumer setExecutor(ExecutorService executor) {
+    public NSQConsumer setExecutor(final ExecutorService executor) {
         if (!started) {
             this.executor = executor;
         }
@@ -158,7 +178,7 @@ public class NSQConsumer {
     private Set<ServerAddress> lookupAddresses() {
         try {
             return lookup.lookup(topic);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw Throwables.propagate(e);
         }
     }

@@ -13,26 +13,22 @@ import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import java.util.concurrent.ExecutorService;
-
 public class ConnectionPoolFactory extends BaseKeyedPooledObjectFactory<ServerAddress, Connection> {
     private Bootstrap bootstrap;
-    private ExecutorService executor;
     private NSQConfig config;
 
 
-    public ConnectionPoolFactory(NSQConfig config, ExecutorService executor) {
+    public ConnectionPoolFactory(NSQConfig config) {
         bootstrap = new Bootstrap();
         bootstrap.group(new NioEventLoopGroup());
         bootstrap.channel(NioSocketChannel.class);
         bootstrap.handler(new NSQClientInitializer());
-        this.executor = executor;
         this.config = config;
     }
 
     @Override
     public Connection create(final ServerAddress serverAddress) throws Exception {
-        return new Connection(serverAddress, config, executor);
+        return new Connection(serverAddress, config);
     }
 
 

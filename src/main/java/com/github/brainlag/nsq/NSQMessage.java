@@ -43,6 +43,10 @@ public class NSQMessage {
         this.connection = connection;
     }
 
+    protected Connection getConnection() {
+        return connection;
+    }
+
     public byte[] getId() {
         return id;
     }
