@@ -1,11 +1,14 @@
 package com.github.brainlag.nsq;
 
+import com.google.common.base.Preconditions;
+import io.netty.handler.ssl.SslContext;
 import org.apache.logging.log4j.LogManager;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class NSQConfig {
+
 
     public enum Compression {NO_COMPRESSION, DEFLATE, SNAPPY}
 
@@ -21,6 +24,7 @@ public class NSQConfig {
     private Integer sampleRate = null;
     private String userAgent = null;
     private Integer msgTimeout = null;
+    private SslContext sslContext = null;
 
     public NSQConfig() {
         try {
@@ -68,13 +72,9 @@ public class NSQConfig {
         this.outputBufferTimeout = outputBufferTimeout;
     }
 
-//    public boolean isTlsV1() {
-//        return tlsV1;
-//    }
-//
-//    public void setTlsV1(final boolean tlsV1) {
-//        this.tlsV1 = tlsV1;
-//    }
+    public boolean isTlsV1() {
+        return tlsV1;
+    }
 
     public Compression getCompression() {
         return compression;
@@ -116,6 +116,17 @@ public class NSQConfig {
         this.msgTimeout = msgTimeout;
     }
 
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    public void setSslContext(SslContext sslContext) {
+        Preconditions.checkNotNull(sslContext);
+        tlsV1 = true;
+        this.sslContext = sslContext;
+    }
+
     @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
@@ -131,9 +142,9 @@ public class NSQConfig {
         if (getOutputBufferTimeout() != null) {
             buffer.append("\"output_buffer_timeout\":" + getOutputBufferTimeout().toString() + ", ");
         }
-//        if(isTlsV1()) {
-//            buffer.append("\"tls_v1\":" + isTlsV1() + ", ");
-//        }
+        if (isTlsV1()) {
+            buffer.append("\"tls_v1\":" + isTlsV1() + ", ");
+        }
         if (getCompression() == Compression.SNAPPY) {
             buffer.append("\"snappy\": true, ");
         }

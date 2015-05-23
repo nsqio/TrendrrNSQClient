@@ -11,9 +11,12 @@ import io.netty.handler.codec.compression.SnappyFramedDecoder;
 import io.netty.handler.codec.compression.SnappyFramedEncoder;
 import io.netty.handler.codec.compression.ZlibCodecFactory;
 import io.netty.handler.codec.compression.ZlibWrapper;
+import io.netty.handler.ssl.SslHandler;
 import org.apache.logging.log4j.LogManager;
 
-public class NSQFeatureDedectionHandler extends SimpleChannelInboundHandler<NSQFrame> {
+import javax.net.ssl.SSLEngine;
+
+public class NSQFeatureDetectionHandler extends SimpleChannelInboundHandler<NSQFrame> {
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final NSQFrame msg) throws Exception {
@@ -25,6 +28,11 @@ public class NSQFeatureDedectionHandler extends SimpleChannelInboundHandler<NSQF
             final Connection con = ctx.channel().attr(Connection.STATE).get();
             if (response.getMessage().equals("OK")) {
                 return;
+            }
+            if (response.getMessage().contains("\"tls_v1\":true")) {
+                SSLEngine sslEngine = con.getConfig().getSslContext().newEngine(ctx.channel().alloc());
+                sslEngine.setUseClientMode(true);
+                pipeline.addBefore("LengthFieldBasedFrameDecoder", "SSLHandler", new SslHandler(sslEngine, false));
             }
             if (response.getMessage().contains("\"snappy\":true")) {
                 LogManager.getLogger(this).info("Adding snappy to pipline");

@@ -15,7 +15,7 @@ public class NSQClientInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast("LengthFieldBasedFrameDecoder", dec);
         pipeline.addLast("NSQDecoder", new NSQDecoder()); // in
         pipeline.addLast("NSQEncoder", new NSQEncoder()); // out
-        pipeline.addLast("FeatureDetectionHandler", new NSQFeatureDedectionHandler());
+        pipeline.addLast("FeatureDetectionHandler", new NSQFeatureDetectionHandler());
         pipeline.addLast("NSQHandler", new NSQHandler()); // in
     }
 }
