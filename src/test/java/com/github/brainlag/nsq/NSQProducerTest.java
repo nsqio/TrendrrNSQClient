@@ -156,17 +156,17 @@ public class NSQProducerTest {
         producer.produce("test3", msg.getBytes());
         producer.shutdown();
 
-//        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
-//            LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
-//            counter.incrementAndGet();
-//            message.finished();
-//        }, getSslAndSnappyConfig());
-//        consumer.start();
-//        while (counter.get() == 0) {
-//            Thread.sleep(500);
-//        }
-//        assertEquals(1, counter.get());
-//        consumer.shutdown();
+        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
+            LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
+            counter.incrementAndGet();
+            message.finished();
+        }, getSslAndSnappyConfig());
+        consumer.start();
+        while (counter.get() == 0) {
+            Thread.sleep(500);
+        }
+        assertEquals(1, counter.get());
+        consumer.shutdown();
     }
 
     @Test
@@ -184,17 +184,17 @@ public class NSQProducerTest {
         producer.produce("test3", msg.getBytes());
         producer.shutdown();
 
-        //        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
-//            LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
-//            counter.incrementAndGet();
-//            message.finished();
-//        }, getSslAndDeflateConfig());
-//        consumer.start();
-//        while (counter.get() == 0) {
-//            Thread.sleep(500);
-//        }
-//        assertEquals(1, counter.get());
-//        consumer.shutdown();
+        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
+            LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
+            counter.incrementAndGet();
+            message.finished();
+        }, getSslAndDeflateConfig());
+        consumer.start();
+        while (counter.get() == 0) {
+            Thread.sleep(500);
+        }
+        assertEquals(1, counter.get());
+        consumer.shutdown();
     }
 
 
@@ -292,12 +292,6 @@ public class NSQProducerTest {
         assertTrue(counter.get() >= 50);
         consumer.shutdown();
     }
-
-//    @Test
-//    public void debugPipeline() throws NoConnectionsException {
-//        Connection con = new Connection(new ServerAddress("localhost", 4150), getSnappyConfig());
-//        con.command(NSQCommand.instance("NOP"));
-//    }
 
     private String randomString() {
         return "Message" + new Date().getTime();
