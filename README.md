@@ -15,7 +15,6 @@ heavily forked of TrendrrNSQClient.
 
 ## TODO:
 * auth
-* ssl
 * backoff
 * more tests
 * better docu

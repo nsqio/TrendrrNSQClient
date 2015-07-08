@@ -27,6 +27,8 @@ public class NSQConsumer {
     private final NSQErrorCallback errorCallback;
     private final NSQConfig config;
     private final Timer timer = new Timer();
+    private final Timer timeout = new Timer();
+    private volatile long nextTimeout = 0;
     private final Map<ServerAddress, Connection> connections = Maps.newHashMap();
     private final AtomicLong totalMessages = new AtomicLong(0l);
 
@@ -91,14 +93,46 @@ public class NSQConsumer {
         } else {
             try {
                 executor.execute(() -> callback.message(message));
+                if (nextTimeout > 0) {
+                    updateTimeout(message, -500);
+                }
             } catch (RejectedExecutionException re) {
-
+                updateTimeout(message, 500);
             }
         }
+
         final long tot = totalMessages.incrementAndGet();
         if (tot % messagesPerBatch > (messagesPerBatch / 2)) {
             //request some more!
-            message.getConnection().command(NSQCommand.instance("RDY " + messagesPerBatch));
+            rdy(message, messagesPerBatch);
+        }
+    }
+
+    private void updateTimeout(final NSQMessage message, long change) {
+        rdy(message, 0);
+        timeout.cancel();
+        Date newTimeout = caculateTimeoutDate(change);
+        if (newTimeout != null) {
+            timeout.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    rdy(message, 1); // test the waters
+                }
+            }, newTimeout);
+        }
+    }
+
+    private void rdy(final NSQMessage message, int size) {
+        message.getConnection().command(NSQCommand.instance("RDY " + size));
+    }
+
+    private Date caculateTimeoutDate(final long i) {
+        if (System.currentTimeMillis() - nextTimeout + i > 50) {
+            nextTimeout += i;
+            return new Date();
+        } else {
+            nextTimeout = 0;
+            return null;
         }
     }
 
