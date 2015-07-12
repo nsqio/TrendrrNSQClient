@@ -15,7 +15,7 @@ import javax.net.ssl.SSLException;
 import java.io.File;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
@@ -291,6 +291,46 @@ public class NSQProducerTest {
         }
         assertTrue(counter.get() >= 50);
         consumer.shutdown();
+    }
+
+    @Test
+    public void testBackoff() throws InterruptedException, NSQException, TimeoutException {
+        AtomicInteger counter = new AtomicInteger(0);
+        NSQLookup lookup = new DefaultNSQLookup();
+        lookup.addLookupAddress("localhost", 4161);
+
+        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
+            LogManager.getLogger(this).info("Processing message: " + new String(message.getMessage()));
+            counter.incrementAndGet();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+            }
+            message.finished();
+        });
+        consumer.setExecutor(newBackoffThreadExecutor());
+        consumer.start();
+
+        NSQProducer producer = new NSQProducer();
+        producer.addAddress("localhost", 4150);
+        producer.start();
+        for (int i = 0; i < 20; i++) {
+            String msg = randomString();
+            producer.produce("test3", msg.getBytes());
+        }
+        producer.shutdown();
+
+        while (counter.get() < 20) {
+            Thread.sleep(500);
+        }
+        assertTrue(counter.get() >= 20);
+        consumer.shutdown();
+    }
+
+    public static ExecutorService newBackoffThreadExecutor() {
+        return new ThreadPoolExecutor(1, 1,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(1));
     }
 
     private String randomString() {

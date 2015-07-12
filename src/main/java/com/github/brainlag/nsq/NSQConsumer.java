@@ -27,7 +27,7 @@ public class NSQConsumer {
     private final NSQErrorCallback errorCallback;
     private final NSQConfig config;
     private final Timer timer = new Timer();
-    private final Timer timeout = new Timer();
+    private Timer timeout = new Timer();
     private volatile long nextTimeout = 0;
     private final Map<ServerAddress, Connection> connections = Maps.newHashMap();
     private final AtomicLong totalMessages = new AtomicLong(0l);
@@ -97,6 +97,8 @@ public class NSQConsumer {
                     updateTimeout(message, -500);
                 }
             } catch (RejectedExecutionException re) {
+                LogManager.getLogger(this).trace("Backing off");
+                message.requeue();
                 updateTimeout(message, 500);
             }
         }
@@ -110,9 +112,11 @@ public class NSQConsumer {
 
     private void updateTimeout(final NSQMessage message, long change) {
         rdy(message, 0);
+        LogManager.getLogger(this).trace("RDY 0! Halt Flow.");
         timeout.cancel();
         Date newTimeout = caculateTimeoutDate(change);
         if (newTimeout != null) {
+            timeout = new Timer();
             timeout.schedule(new TimerTask() {
                 @Override
                 public void run() {

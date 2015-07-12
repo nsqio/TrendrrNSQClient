@@ -9,16 +9,9 @@ heavily forked of TrendrrNSQClient.
 <dependency>
   <groupId>com.github.brainlag</groupId>
   <artifactId>nsq-client</artifactId>
-  <version>1.0.0.ALPHA</version>
+  <version>1.0.0.BETA</version>
 </dependency>
 ```
-
-## TODO:
-* auth
-* backoff
-* more tests
-* better docu
-* ....
 
 ## Consumer
 
@@ -48,3 +41,11 @@ NSQProducer producer = new NSQProducer().addAddress("localhost", 4150).start();
 producer.produce("TestTopic", ("this is a message").getBytes());
 ```
 
+## Backoff
+
+By default Backoff does not kick in and a consumer will eat all your memory
+and CPU. To enable Backoff you have to set your own thread pool executer with:
+
+```
+consumer.setExecutor(...);
+```
