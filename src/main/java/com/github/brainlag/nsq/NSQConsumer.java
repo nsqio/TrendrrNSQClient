@@ -8,6 +8,7 @@ import com.github.brainlag.nsq.frames.NSQFrame;
 import com.github.brainlag.nsq.lookup.NSQLookup;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
@@ -178,19 +179,21 @@ public class NSQConsumer {
 
 
     private void connect() {
-        final Set<ServerAddress> newAddresses = lookupAddresses();
-        final Set<ServerAddress> oldAddresses = connections.keySet();
-        oldAddresses.removeAll(newAddresses);
-        for (final ServerAddress server : oldAddresses) {
-            connections.get(server).close();
-            connections.remove(server);
-        }
         for (final Iterator<Map.Entry<ServerAddress, Connection>> it = connections.entrySet().iterator(); it.hasNext(); ) {
             if (!it.next().getValue().isConnected()) {
                 it.remove();
             }
         }
-        for (final ServerAddress server : newAddresses) {
+
+        final Set<ServerAddress> newAddresses = lookupAddresses();
+        final Set<ServerAddress> oldAddresses = connections.keySet();
+
+        for (final ServerAddress server : Sets.difference(oldAddresses, newAddresses)) {
+            connections.get(server).close();
+            connections.remove(server);
+        }
+
+        for (final ServerAddress server : Sets.difference(newAddresses, oldAddresses)) {
             if (!connections.containsKey(server)) {
                 connections.put(server, createConnection(server));
             }
