@@ -58,7 +58,7 @@ public class NSQConsumer {
 
     }
 
-    public NSQConsumer start() {
+    public NSQConsumer start() throws IOException {
         if (!started) {
             started = true;
             //connect once otherwise we might have to wait one lookupPeriod
@@ -66,7 +66,12 @@ public class NSQConsumer {
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    connect();
+                    try {
+                        connect();
+                    } catch (Throwable t) {
+                        //dangerous but do nothing for now
+                        //The connect outside of this loop will throw an exception
+                    }
                 }
             }, lookupPeriod, lookupPeriod);
         }
@@ -178,7 +183,7 @@ public class NSQConsumer {
     }
 
 
-    private void connect() {
+    private void connect() throws IOException {
         for (final Iterator<Map.Entry<ServerAddress, Connection>> it = connections.entrySet().iterator(); it.hasNext(); ) {
             if (!it.next().getValue().isConnected()) {
                 it.remove();
@@ -187,6 +192,11 @@ public class NSQConsumer {
 
         final Set<ServerAddress> newAddresses = lookupAddresses();
         final Set<ServerAddress> oldAddresses = connections.keySet();
+
+        LogManager.getLogger(this).warn("Addresses NSQ connected to: " + newAddresses);
+        if (newAddresses.isEmpty()) {
+            throw new IOException("No NSQLookup server connections");
+        }
 
         for (final ServerAddress server : Sets.difference(oldAddresses, newAddresses)) {
             connections.get(server).close();
