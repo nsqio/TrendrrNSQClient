@@ -120,7 +120,7 @@ public class NSQConsumer {
         rdy(message, 0);
         LogManager.getLogger(this).trace("RDY 0! Halt Flow.");
         timeout.cancel();
-        Date newTimeout = caculateTimeoutDate(change);
+        Date newTimeout = calculateTimeoutDate(change);
         if (newTimeout != null) {
             timeout = new Timer();
             timeout.schedule(new TimerTask() {
@@ -136,7 +136,7 @@ public class NSQConsumer {
         message.getConnection().command(NSQCommand.instance("RDY " + size));
     }
 
-    private Date caculateTimeoutDate(final long i) {
+    private Date calculateTimeoutDate(final long i) {
         if (System.currentTimeMillis() - nextTimeout + i > 50) {
             nextTimeout += i;
             return new Date();
