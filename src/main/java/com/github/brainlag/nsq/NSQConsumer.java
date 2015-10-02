@@ -233,4 +233,8 @@ public class NSQConsumer {
             throw Throwables.propagate(e);
         }
     }
+
+    public void scheduleRun(TimerTask task, int delay, int scheduleTime) {
+        timeout.schedule(task, delay, scheduleTime);
+    }
 }
