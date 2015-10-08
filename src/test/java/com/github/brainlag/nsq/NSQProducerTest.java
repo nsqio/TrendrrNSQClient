@@ -265,7 +265,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testMulitMessage() throws NSQException, TimeoutException, InterruptedException, IOException {
+    public void testMultiMessage() throws NSQException, TimeoutException, InterruptedException, IOException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
@@ -325,6 +325,21 @@ public class NSQProducerTest {
             Thread.sleep(500);
         }
         assertTrue(counter.get() >= 20);
+        consumer.shutdown();
+    }
+
+    @Test
+    public void testScheduledCallback() throws NSQException, TimeoutException, InterruptedException, IOException {
+        AtomicInteger counter = new AtomicInteger(0);
+        NSQLookup lookup = new DefaultNSQLookup();
+        lookup.addLookupAddress("localhost", 4161);
+
+        NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {});
+        consumer.scheduleRun(() -> counter.incrementAndGet(), 1000, 1000, TimeUnit.MILLISECONDS);
+        consumer.start();
+
+        Thread.sleep(1000);
+        assertTrue(counter.get() == 1);
         consumer.shutdown();
     }
 
