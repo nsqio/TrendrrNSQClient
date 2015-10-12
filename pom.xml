@@ -6,7 +6,7 @@
 
   <groupId>com.github.brainlag</groupId>
   <artifactId>nsq-client</artifactId>
-  <version>1.0.0.ALPHA</version>
+  <version>1.0.0.BETA</version>
 
   <name>JavaNSQClient</name>
   <description>Fast Java client for NSQ.</description>
@@ -98,7 +98,7 @@
           <plugin>
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.3</version>
+            <version>1.6.5</version>
             <extensions>true</extensions>
             <configuration>
               <serverId>ossrh</serverId>
@@ -126,19 +126,19 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>2.2</version>
+      <version>2.4</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
-      <version>2.2</version>
+      <version>2.4</version>
     </dependency>
 
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
-      <version>4.0.28.Final</version>
+      <version>4.0.32.Final</version>
     </dependency>
 
     <dependency>
@@ -150,13 +150,13 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.5.1</version>
+      <version>2.6.2</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-pool2</artifactId>
-      <version>2.3</version>
+      <version>2.4.2</version>
     </dependency>
 
     <dependency>
@@ -169,7 +169,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-tcnative</artifactId>
-      <version>1.1.33.Fork2</version>
+      <version>1.1.33.Fork9</version>
       <classifier>${os.detected.classifier}</classifier>
       <scope>test</scope>
     </dependency>
