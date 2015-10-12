@@ -13,7 +13,6 @@ import org.junit.Test;
 
 import javax.net.ssl.SSLException;
 import java.io.File;
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
@@ -62,7 +61,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testProduceOneMsgSnappy() throws NSQException, TimeoutException, InterruptedException, IOException {
+    public void testProduceOneMsgSnappy() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
@@ -89,7 +88,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testProduceOneMsgDeflate() throws NSQException, TimeoutException, InterruptedException, IOException {
+    public void testProduceOneMsgDeflate() throws NSQException, TimeoutException, InterruptedException {
         System.setProperty("io.netty.noJdkZlibDecoder", "false");
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
@@ -117,7 +116,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testProduceOneMsgSsl() throws InterruptedException, NSQException, TimeoutException, SSLException, IOException {
+    public void testProduceOneMsgSsl() throws InterruptedException, NSQException, TimeoutException, SSLException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
@@ -144,7 +143,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testProduceOneMsgSslAndSnappy() throws InterruptedException, NSQException, TimeoutException, SSLException, IOException {
+    public void testProduceOneMsgSslAndSnappy() throws InterruptedException, NSQException, TimeoutException, SSLException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
@@ -171,7 +170,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testProduceOneMsgSslAndDeflat() throws InterruptedException, NSQException, TimeoutException, IOException {
+    public void testProduceOneMsgSslAndDeflat() throws InterruptedException, NSQException, TimeoutException, SSLException {
         System.setProperty("io.netty.noJdkZlibDecoder", "false");
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
@@ -200,7 +199,7 @@ public class NSQProducerTest {
 
 
     @Test
-    public void testProduceMoreMsg() throws NSQException, TimeoutException, InterruptedException, IOException {
+    public void testProduceMoreMsg() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
@@ -229,7 +228,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testParallelProducer() throws NSQException, TimeoutException, InterruptedException, IOException {
+    public void testParallelProducer() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
@@ -265,7 +264,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testMultiMessage() throws NSQException, TimeoutException, InterruptedException, IOException {
+    public void testMultiMessage() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
@@ -295,7 +294,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testBackoff() throws InterruptedException, NSQException, TimeoutException, IOException {
+    public void testBackoff() throws InterruptedException, NSQException, TimeoutException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
@@ -329,7 +328,7 @@ public class NSQProducerTest {
     }
 
     @Test
-    public void testScheduledCallback() throws NSQException, TimeoutException, InterruptedException, IOException {
+    public void testScheduledCallback() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
