@@ -22,15 +22,14 @@ public class DefaultNSQLookup implements NSQLookup {
     }
 
     @Override
-    public Set<ServerAddress> lookup(String topic) throws IOException {
+    public Set<ServerAddress> lookup(String topic) {
         Set<ServerAddress> addresses = Sets.newHashSet();
 
-        for (String addr : this.addresses) {
+        for (String addr : getLookupAddresses()) {
             try {
                 ObjectMapper mapper = new ObjectMapper();
-
                 JsonNode jsonNode = mapper.readTree(new URL(addr + "/lookup?topic=" + topic));
-                LogManager.getLogger(this).warn("Server connection information: " + jsonNode.toString());
+                LogManager.getLogger(this).debug("Server connection information: " + jsonNode.toString());
                 JsonNode producers = jsonNode.get("data").get("producers");
                 for (JsonNode node : producers) {
                     String host = node.get("broadcast_address").asText();
@@ -42,10 +41,9 @@ public class DefaultNSQLookup implements NSQLookup {
             }
         }
         if (addresses.isEmpty()) {
-            throw new IOException("Unable to connect to any NSQ Lookup servers, servers tried: " + this.addresses.toString());
-        } else {
-            return addresses;
+            LogManager.getLogger(this).warn("Unable to connect to any NSQ Lookup servers, servers tried: " + this.addresses.toString());
         }
+        return addresses;
     }
 
     public Set<String> getLookupAddresses() {

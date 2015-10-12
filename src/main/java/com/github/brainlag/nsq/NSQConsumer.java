@@ -6,12 +6,10 @@ import com.github.brainlag.nsq.exceptions.NoConnectionsException;
 import com.github.brainlag.nsq.frames.ErrorFrame;
 import com.github.brainlag.nsq.frames.NSQFrame;
 import com.github.brainlag.nsq.lookup.NSQLookup;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -55,18 +53,13 @@ public class NSQConsumer {
 
     }
 
-    public NSQConsumer start() throws IOException {
+    public NSQConsumer start() {
         if (!started) {
             started = true;
             //connect once otherwise we might have to wait one lookupPeriod
             connect();
             scheduler.scheduleAtFixedRate(() -> {
-                try {
                     connect();
-                } catch (Throwable t) {
-                    //dangerous but do nothing for now
-                    //The connect outside of this loop will throw an exception
-                }
             }, lookupPeriod, lookupPeriod, TimeUnit.MILLISECONDS);
         }
         return this;
@@ -175,7 +168,7 @@ public class NSQConsumer {
     }
 
 
-    private void connect() throws IOException {
+    private void connect() {
         for (final Iterator<Map.Entry<ServerAddress, Connection>> it = connections.entrySet().iterator(); it.hasNext(); ) {
             if (!it.next().getValue().isConnected()) {
                 it.remove();
@@ -185,19 +178,23 @@ public class NSQConsumer {
         final Set<ServerAddress> newAddresses = lookupAddresses();
         final Set<ServerAddress> oldAddresses = connections.keySet();
 
-        LogManager.getLogger(this).warn("Addresses NSQ connected to: " + newAddresses);
+        LogManager.getLogger(this).debug("Addresses NSQ connected to: " + newAddresses);
         if (newAddresses.isEmpty()) {
-            throw new IOException("No NSQLookup server connections");
-        }
+            // in case the lookup server is not reachable for a short time we don't we dont want to
+            // force close connection
+            // just log a message and keep moving
+            LogManager.getLogger(this).warn("No NSQLookup server connections or topic does not exist.");
+        } else {
+            for (final ServerAddress server : Sets.difference(oldAddresses, newAddresses)) {
+                LogManager.getLogger(this).info("Remove connection " + server.toString());
+                connections.get(server).close();
+                connections.remove(server);
+            }
 
-        for (final ServerAddress server : Sets.difference(oldAddresses, newAddresses)) {
-            connections.get(server).close();
-            connections.remove(server);
-        }
-
-        for (final ServerAddress server : Sets.difference(newAddresses, oldAddresses)) {
-            if (!connections.containsKey(server)) {
-                connections.put(server, createConnection(server));
+            for (final ServerAddress server : Sets.difference(newAddresses, oldAddresses)) {
+                if (!connections.containsKey(server)) {
+                    connections.put(server, createConnection(server));
+                }
             }
         }
     }
@@ -219,11 +216,7 @@ public class NSQConsumer {
     }
 
     private Set<ServerAddress> lookupAddresses() {
-        try {
-            return lookup.lookup(topic);
-        } catch (final IOException e) {
-            throw Throwables.propagate(e);
-        }
+        return lookup.lookup(topic);
     }
 
     /**
