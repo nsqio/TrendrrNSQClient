@@ -6,7 +6,7 @@
 
   <groupId>com.github.brainlag</groupId>
   <artifactId>nsq-client</artifactId>
-  <version>1.0.0.BETA</version>
+  <version>1.0.0.RC1</version>
 
   <name>JavaNSQClient</name>
   <description>Fast Java client for NSQ.</description>
