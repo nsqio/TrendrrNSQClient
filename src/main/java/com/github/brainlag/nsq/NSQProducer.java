@@ -168,6 +168,10 @@ public class NSQProducer {
         return executor;
     }
 
+    public GenericKeyedObjectPool<ServerAddress, Connection> getPool() {
+        return pool;
+    }
+
     public void shutdown() {
         pool.close();
         executor.shutdown();
