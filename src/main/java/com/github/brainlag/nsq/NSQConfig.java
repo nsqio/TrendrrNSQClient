@@ -1,6 +1,7 @@
 package com.github.brainlag.nsq;
 
 import com.google.common.base.Preconditions;
+import io.netty.channel.EventLoopGroup;
 import io.netty.handler.ssl.SslContext;
 import org.apache.logging.log4j.LogManager;
 
@@ -25,6 +26,7 @@ public class NSQConfig {
     private String userAgent = null;
     private Integer msgTimeout = null;
     private SslContext sslContext = null;
+    private EventLoopGroup eventLoopGroup = null;
 
     public NSQConfig() {
         try {
@@ -125,6 +127,14 @@ public class NSQConfig {
         Preconditions.checkNotNull(sslContext);
         tlsV1 = true;
         this.sslContext = sslContext;
+    }
+
+    public EventLoopGroup getEventLoopGroup() {
+        return eventLoopGroup;
+    }
+
+    public void setEventLoopGroup(final EventLoopGroup eventLoopGroup) {
+        this.eventLoopGroup = eventLoopGroup;
     }
 
     @Override

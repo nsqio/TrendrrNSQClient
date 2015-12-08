@@ -4,25 +4,16 @@ import com.github.brainlag.nsq.Connection;
 import com.github.brainlag.nsq.NSQCommand;
 import com.github.brainlag.nsq.NSQConfig;
 import com.github.brainlag.nsq.ServerAddress;
-import com.github.brainlag.nsq.netty.NSQClientInitializer;
-import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 public class ConnectionPoolFactory extends BaseKeyedPooledObjectFactory<ServerAddress, Connection> {
-    private Bootstrap bootstrap;
     private NSQConfig config;
 
 
     public ConnectionPoolFactory(NSQConfig config) {
-        bootstrap = new Bootstrap();
-        bootstrap.group(new NioEventLoopGroup());
-        bootstrap.channel(NioSocketChannel.class);
-        bootstrap.handler(new NSQClientInitializer());
         this.config = config;
     }
 

@@ -35,7 +35,8 @@ public class Connection {
     private NSQErrorCallback errorCallback = null;
     private final LinkedBlockingQueue<NSQCommand> requests = new LinkedBlockingQueue<>(1);
     private final LinkedBlockingQueue<NSQFrame> responses = new LinkedBlockingQueue<>(1);
-    private static final EventLoopGroup group = new NioEventLoopGroup();
+    private static EventLoopGroup defaultGroup = null;
+    private final EventLoopGroup eventLoopGroup;
     private final NSQConfig config;
 
 
@@ -43,7 +44,8 @@ public class Connection {
         this.address = serverAddress;
         this.config = config;
         final Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(group);
+        eventLoopGroup = config.getEventLoopGroup() != null ? config.getEventLoopGroup() : getDefaultGroup();
+        bootstrap.group(eventLoopGroup);
         bootstrap.channel(NioSocketChannel.class);
         bootstrap.handler(new NSQClientInitializer());
         // Start the connection attempt.
@@ -71,6 +73,13 @@ public class Connection {
             LogManager.getLogger(this).error("Creating connection timed out", e);
             close();
         }
+    }
+
+    private EventLoopGroup getDefaultGroup() {
+        if (defaultGroup == null) {
+            defaultGroup = new NioEventLoopGroup();
+        }
+        return defaultGroup;
     }
 
     public boolean isConnected() {
@@ -123,7 +132,7 @@ public class Connection {
     }
 
 
-    void heartbeat() {
+    private void heartbeat() {
         LogManager.getLogger(this).info("HEARTBEAT!");
         command(NSQCommand.instance("NOP"));
     }
