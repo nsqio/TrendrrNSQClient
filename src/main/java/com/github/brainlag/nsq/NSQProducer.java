@@ -173,6 +173,7 @@ public class NSQProducer {
     }
 
     public void shutdown() {
+        started = false;
         pool.close();
         executor.shutdown();
     }
