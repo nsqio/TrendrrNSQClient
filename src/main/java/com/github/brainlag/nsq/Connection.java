@@ -133,7 +133,7 @@ public class Connection {
 
 
     private void heartbeat() {
-        LogManager.getLogger(this).info("HEARTBEAT!");
+        LogManager.getLogger(this).trace("HEARTBEAT!");
         command(NSQCommand.instance("NOP"));
     }
 

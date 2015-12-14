@@ -37,7 +37,8 @@ public class DefaultNSQLookup implements NSQLookup {
                     addresses.add(address);
                 }
             } catch (IOException e) {
-                LogManager.getLogger(this).warn("Unable to connect to address " + addr);
+                LogManager.getLogger(this).warn("Unable to connect to address {}", addr);
+                LogManager.getLogger(this).debug(e.getMessage());
             }
         }
         if (addresses.isEmpty()) {
