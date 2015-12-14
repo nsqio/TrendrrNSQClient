@@ -18,8 +18,8 @@ heavily forked of TrendrrNSQClient.
 Example usage:
 
 ```
-NSQLookup lookup = new NSQLookup();
-lookup.addAddr("localhost", 4161);
+NSQLookup lookup = new DefaultNSQLookup();
+lookup.addLookupAddress("localhost", 4161);
 NSQConsumer consumer = new NSQConsumer(lookup, "speedtest", "dustin", (message) -> {
         System.out.println("received: " + message);            
         //now mark the message as finished.
