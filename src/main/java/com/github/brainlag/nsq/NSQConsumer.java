@@ -10,11 +10,23 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class NSQConsumer {
+public class NSQConsumer implements Closeable {
 
     private final NSQLookup lookup;
     private final String topic;
@@ -245,5 +257,10 @@ public class NSQConsumer {
             this.scheduler = scheduler;
         }
         return this;
+    }
+
+    @Override
+    public void close() throws IOException {
+        shutdown();
     }
 }
