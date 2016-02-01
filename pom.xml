@@ -29,6 +29,10 @@
     <url>git@github.com:brainlag/JavaNSQClient.git</url>
   </scm>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -126,31 +130,31 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>2.4</version>
+      <version>2.5</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
-      <version>2.4</version>
+      <version>2.5</version>
     </dependency>
 
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
-      <version>4.0.32.Final</version>
+      <version>4.0.34.Final</version>
     </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>18.0</version>
+      <version>19.0</version>
     </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.6.2</version>
+      <version>2.6.4</version>
     </dependency>
 
     <dependency>
@@ -169,7 +173,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-tcnative</artifactId>
-      <version>1.1.33.Fork9</version>
+      <version>1.1.33.Fork11</version>
       <classifier>${os.detected.classifier}</classifier>
       <scope>test</scope>
     </dependency>
