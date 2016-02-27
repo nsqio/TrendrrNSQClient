@@ -68,7 +68,9 @@ public class Connection {
         final NSQCommand ident = NSQCommand.instance("IDENTIFY", config.toString().getBytes());
         try {
             final NSQFrame response = commandAndWait(ident);
-            LogManager.getLogger(this).info("Server identification: " + ((ResponseFrame) response).getMessage());
+            if (response != null) {
+                LogManager.getLogger(this).info("Server identification: " + ((ResponseFrame) response).getMessage());
+            }
         } catch (final TimeoutException e) {
             LogManager.getLogger(this).error("Creating connection timed out", e);
             close();

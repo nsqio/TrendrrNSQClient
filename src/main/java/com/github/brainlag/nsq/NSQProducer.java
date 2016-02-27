@@ -90,7 +90,7 @@ public class NSQProducer {
 
 
             NSQFrame frame = c.commandAndWait(command);
-            if (frame instanceof ErrorFrame) {
+            if (frame != null && frame instanceof ErrorFrame) {
                 String err = ((ErrorFrame) frame).getErrorMessage();
                 if (err.startsWith("E_BAD_TOPIC")) {
                     throw new BadTopicException(err);
@@ -112,7 +112,7 @@ public class NSQProducer {
         try {
             NSQCommand command = NSQCommand.instance("PUB " + topic, message);
             NSQFrame frame = c.commandAndWait(command);
-            if (frame instanceof ErrorFrame) {
+            if (frame != null && frame instanceof ErrorFrame) {
                 String err = ((ErrorFrame) frame).getErrorMessage();
                 if (err.startsWith("E_BAD_TOPIC")) {
                     throw new BadTopicException(err);

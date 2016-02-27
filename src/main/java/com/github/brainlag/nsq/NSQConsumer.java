@@ -153,7 +153,7 @@ public class NSQConsumer implements Closeable {
         try {
             for (final Connection connection : connections.values()) {
                 final NSQFrame frame = connection.commandAndWait(command);
-                if (frame instanceof ErrorFrame) {
+                if (frame != null && frame instanceof ErrorFrame) {
                     final String err = ((ErrorFrame) frame).getErrorMessage();
                     if (err.startsWith("E_INVALID")) {
                         throw new IllegalStateException(err);
