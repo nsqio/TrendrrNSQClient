@@ -71,7 +71,7 @@ public class NSQConsumer implements Closeable {
             //connect once otherwise we might have to wait one lookupPeriod
             connect();
             scheduler.scheduleAtFixedRate(() -> {
-                    connect();
+                connect();
             }, lookupPeriod, lookupPeriod, TimeUnit.MILLISECONDS);
         }
         return this;
@@ -88,6 +88,7 @@ public class NSQConsumer implements Closeable {
 
             return connection;
         } catch (final NoConnectionsException e) {
+            LogManager.getLogger(this).warn("Could not create connection to server {}", serverAddress.toString(), e);
             return null;
         }
     }
@@ -205,7 +206,10 @@ public class NSQConsumer implements Closeable {
 
             for (final ServerAddress server : Sets.difference(newAddresses, oldAddresses)) {
                 if (!connections.containsKey(server)) {
-                    connections.put(server, createConnection(server));
+                    final Connection connection = createConnection(server);
+                    if (connection != null) {
+                        connections.put(server, connection);
+                    }
                 }
             }
         }
