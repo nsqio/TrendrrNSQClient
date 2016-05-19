@@ -3,11 +3,13 @@ package com.github.brainlag.nsq.lookup;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.brainlag.nsq.ServerAddress;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Set;
 public class DefaultNSQLookup implements NSQLookup {
     Set<String> addresses = Sets.newHashSet();
@@ -28,7 +30,8 @@ public class DefaultNSQLookup implements NSQLookup {
         for (String addr : getLookupAddresses()) {
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                JsonNode jsonNode = mapper.readTree(new URL(addr + "/lookup?topic=" + topic));
+                String topicEncoded = URLEncoder.encode(topic, Charsets.UTF_8.name());
+                JsonNode jsonNode = mapper.readTree(new URL(addr + "/lookup?topic=" + topicEncoded));
                 LogManager.getLogger(this).debug("Server connection information: " + jsonNode.toString());
                 JsonNode producers = jsonNode.get("data").get("producers");
                 for (JsonNode node : producers) {
