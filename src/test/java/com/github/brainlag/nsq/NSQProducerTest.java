@@ -15,6 +15,7 @@ import javax.net.ssl.SSLException;
 import java.io.File;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -340,6 +341,23 @@ public class NSQProducerTest {
         Thread.sleep(1000);
         assertTrue(counter.get() == 1);
         consumer.shutdown();
+    }
+
+    @Test
+    public void testEphemeralTopic() throws InterruptedException, NSQException, TimeoutException {
+        NSQLookup lookup = new DefaultNSQLookup();
+        lookup.addLookupAddress("localhost", 4161);
+
+        NSQProducer producer = new NSQProducer();
+        producer.setConfig(getDeflateConfig());
+        producer.addAddress("localhost", 4150);
+        producer.start();
+        String msg = randomString();
+        producer.produce("testephem#ephemeral", msg.getBytes());
+        producer.shutdown();
+
+        Set<ServerAddress> servers = lookup.lookup("testephem#ephemeral");
+        assertEquals("Could not find servers for ephemeral topic", 1, servers.size());
     }
 
     public static ExecutorService newBackoffThreadExecutor() {
