@@ -17,7 +17,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,7 +42,7 @@ public class NSQConsumer implements Closeable {
     private int messagesPerBatch = 200;
     private long lookupPeriod = 60 * 1000; // how often to recheck for new nodes (and clean up non responsive nodes)
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private ExecutorService executor = Executors.newCachedThreadPool();
+    private Executor executor = Executors.newCachedThreadPool();
     private Optional<ScheduledFuture<?>> timeout = Optional.empty();
 
     public NSQConsumer(final NSQLookup lookup, final String topic, final String channel, final NSQMessageCallback callback) {
@@ -184,7 +184,7 @@ public class NSQConsumer implements Closeable {
     private void connect() {
         for (final Iterator<Map.Entry<ServerAddress, Connection>> it = connections.entrySet().iterator(); it.hasNext(); ) {
             Connection cnn = it.next().getValue();
-            if(!cnn.isConnected() || !cnn.isHeartbeatStatusOK()){
+            if (!cnn.isConnected() || !cnn.isHeartbeatStatusOK()) {
                 //force close
                 cnn.close();
                 it.remove();
@@ -227,7 +227,7 @@ public class NSQConsumer implements Closeable {
      * The executer can only changed before the client is started.
      * Default is a cached threadpool.
      */
-    public NSQConsumer setExecutor(final ExecutorService executor) {
+    public NSQConsumer setExecutor(final Executor executor) {
         if (!started) {
             this.executor = executor;
         }
