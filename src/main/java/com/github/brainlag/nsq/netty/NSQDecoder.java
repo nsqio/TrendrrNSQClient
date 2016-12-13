@@ -26,7 +26,13 @@ public class NSQDecoder extends MessageToMessageDecoder<ByteBuf> {
 		}
 		frame.setSize(size);
 		ByteBuf bytes = in.readBytes(frame.getSize() - 4); //subtract 4 because the frame id is included
-		frame.setData(bytes.array());
+		if (bytes.hasArray()) {
+			frame.setData(bytes.array());
+		} else {
+			byte[] array = new byte[bytes.readableBytes()];
+			bytes.readBytes(array);
+			frame.setData(array);
+		}
 		out.add(frame);
 	}
 
