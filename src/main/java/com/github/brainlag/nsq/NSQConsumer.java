@@ -183,7 +183,10 @@ public class NSQConsumer implements Closeable {
 
     private void connect() {
         for (final Iterator<Map.Entry<ServerAddress, Connection>> it = connections.entrySet().iterator(); it.hasNext(); ) {
-            if (!it.next().getValue().isConnected()) {
+            Connection cnn = it.next().getValue();
+            if(!cnn.isConnected() || !cnn.isHeartbeatStatusOK()){
+                //force close
+                cnn.close();
                 it.remove();
             }
         }

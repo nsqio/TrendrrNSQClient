@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Connection {
     public static final byte[] MAGIC_PROTOCOL_VERSION = "  V2".getBytes();
@@ -38,6 +39,9 @@ public class Connection {
     private static EventLoopGroup defaultGroup = null;
     private final EventLoopGroup eventLoopGroup;
     private final NSQConfig config;
+
+    public static final long HEARTBEAT_MAX_INTERVAL = 1L*60L*1000L;//default one minute
+    private volatile AtomicReference<Long> lastHeartbeatSuccess = new AtomicReference<Long>(System.currentTimeMillis());
 
 
     public Connection(final ServerAddress serverAddress, final NSQConfig config) throws NoConnectionsException {
@@ -92,6 +96,13 @@ public class Connection {
         return requests.size() > 0;
     }
 
+    public boolean isHeartbeatStatusOK(){
+        if(System.currentTimeMillis() - lastHeartbeatSuccess.get() > HEARTBEAT_MAX_INTERVAL){
+            return false;
+        }
+        return true;
+    }
+
     public void incoming(final NSQFrame frame) {
         if (frame instanceof ResponseFrame) {
             if ("_heartbeat_".equals(((ResponseFrame) frame).getMessage())) {
@@ -137,6 +148,7 @@ public class Connection {
     private void heartbeat() {
         LogManager.getLogger(this).trace("HEARTBEAT!");
         command(NSQCommand.instance("NOP"));
+        lastHeartbeatSuccess.getAndSet(System.currentTimeMillis());
     }
 
     public void setErrorCallback(final NSQErrorCallback callback) {
