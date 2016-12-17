@@ -18,7 +18,14 @@ public class MessageFrame extends NSQFrame {
 		timestamp = buf.readLong();
 		attempts = buf.readShort();
 		buf.readBytes(messageId);
-		messageBody = buf.readBytes(buf.readableBytes()).array();
+		ByteBuf messageBodyBuf = buf.readBytes(buf.readableBytes());
+		if (messageBodyBuf.hasArray()) {
+			messageBody = messageBodyBuf.array();
+		} else {
+			byte[] array = new byte[messageBodyBuf.readableBytes()];
+			messageBodyBuf.readBytes(array);
+			messageBody = array;
+		}
 	}
 	
 	public long getTimestamp() {
