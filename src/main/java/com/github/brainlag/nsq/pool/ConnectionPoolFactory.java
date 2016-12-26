@@ -30,7 +30,7 @@ public class ConnectionPoolFactory extends BaseKeyedPooledObjectFactory<ServerAd
 
     @Override
     public boolean validateObject(final ServerAddress key, final PooledObject<Connection> p) {
-        ChannelFuture command = p.getObject().command(NSQCommand.instance("NOP"));
+        ChannelFuture command = p.getObject().command(NSQCommand.nop());
         return command.awaitUninterruptibly().isSuccess();
     }
 

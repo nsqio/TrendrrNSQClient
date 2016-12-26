@@ -1,8 +1,5 @@
 package com.github.brainlag.nsq;
 
-import org.apache.logging.log4j.LogManager;
-
-import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 public class NSQMessage {
@@ -17,30 +14,18 @@ public class NSQMessage {
      * Finished processing this message, let nsq know so it doesnt get reprocessed.
      */
     public void finished() {
-        try {
-            connection.command(NSQCommand.instance("FIN " + new String(id, "ascii")));
-        } catch (UnsupportedEncodingException e) {
-            LogManager.getLogger(this).error("ASCII charset is not supported by your JVM?", e);
-        }
+        connection.command(NSQCommand.finish(this.id));
     }
 
     public void touch() {
-        try {
-            connection.command(NSQCommand.instance("TOUCH " + new String(id, "ascii")));
-        } catch (UnsupportedEncodingException e) {
-            LogManager.getLogger(this).error("ASCII charset is not supported by your JVM?", e);
-        }
+        connection.command(NSQCommand.touch(this.id));
     }
 
     /**
      * indicates a problem with processing, puts it back on the queue.
      */
     public void requeue(int timeoutMillis) {
-        try {
-            connection.command(NSQCommand.instance("REQ " + new String(id, "ascii") + " " + timeoutMillis));
-        } catch (UnsupportedEncodingException e) {
-            LogManager.getLogger(this).error("ASCII charset is not supported by your JVM?", e);
-        }
+        connection.command(NSQCommand.requeue(this.id, timeoutMillis));
     }
 
     public void requeue() {

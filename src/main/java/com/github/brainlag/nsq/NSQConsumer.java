@@ -83,8 +83,8 @@ public class NSQConsumer implements Closeable {
 
             connection.setConsumer(this);
             connection.setErrorCallback(errorCallback);
-            connection.command(NSQCommand.instance("SUB " + topic + " " + this.channel));
-            connection.command(NSQCommand.instance("RDY " + messagesPerBatch));
+            connection.command(NSQCommand.subscribe(topic, channel));
+            connection.command(NSQCommand.ready(messagesPerBatch));
 
             return connection;
         } catch (final NoConnectionsException e) {
@@ -131,7 +131,7 @@ public class NSQConsumer implements Closeable {
     }
 
     private void rdy(final NSQMessage message, int size) {
-        message.getConnection().command(NSQCommand.instance("RDY " + size));
+        message.getConnection().command(NSQCommand.ready(size));
     }
 
     private Date calculateTimeoutDate(final long i) {
@@ -150,7 +150,7 @@ public class NSQConsumer implements Closeable {
     }
 
     private void cleanClose() {
-        final NSQCommand command = NSQCommand.instance("CLS");
+        final NSQCommand command = NSQCommand.startClose();
         try {
             for (final Connection connection : connections.values()) {
                 final NSQFrame frame = connection.commandAndWait(command);

@@ -68,8 +68,9 @@ public class Connection {
         channel.write(buf);
         channel.flush();
 
-        //indentify
-        final NSQCommand ident = NSQCommand.instance("IDENTIFY", config.toString().getBytes());
+        //identify
+        final NSQCommand ident = NSQCommand.identify(config.toString().getBytes());
+
         try {
             final NSQFrame response = commandAndWait(ident);
             if (response != null) {
@@ -147,7 +148,7 @@ public class Connection {
 
     private void heartbeat() {
         LogManager.getLogger(this).trace("HEARTBEAT!");
-        command(NSQCommand.instance("NOP"));
+        command(NSQCommand.nop());
         lastHeartbeatSuccess.getAndSet(System.currentTimeMillis());
     }
 
