@@ -8,6 +8,8 @@ public class NSQCommand {
     String line;
     List<byte[]> data = new ArrayList<>();
 
+    private NSQCommand() { /** no instances */ }
+
     public void addBytes(byte[] bytes) {
         data.add(bytes);
     }
@@ -106,13 +108,13 @@ public class NSQCommand {
         return cmd;
     }
 
-    public static NSQCommand instance(String line) {
+    private static NSQCommand instance(String line) {
         NSQCommand n = new NSQCommand();
         n.setLine(line);
         return n;
     }
 
-    public static NSQCommand instance(String line, byte[] bytes) {
+    private static NSQCommand instance(String line, byte[] bytes) {
         NSQCommand n = instance(line);
         n.addBytes(bytes);
         return n;
