@@ -21,7 +21,7 @@ public class NSQConsumerTest {
     @Test
     public void testLongRunningConsumer() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test1", "testconsumer", (message) -> {

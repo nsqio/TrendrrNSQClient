@@ -14,6 +14,15 @@ import java.util.Set;
 
 public class DefaultNSQLookup implements NSQLookup {
     Set<String> addresses = Sets.newHashSet();
+    private final ObjectMapper mapper;
+
+    public DefaultNSQLookup() {
+        this(new ObjectMapper());
+    }
+
+    public DefaultNSQLookup(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Override
     public void addLookupAddress(String addr, int port) {
@@ -30,7 +39,6 @@ public class DefaultNSQLookup implements NSQLookup {
 
         for (String addr : getLookupAddresses()) {
             try {
-                ObjectMapper mapper = new ObjectMapper();
                 String topicEncoded = URLEncoder.encode(topic, Charsets.UTF_8.name());
                 JsonNode jsonNode = mapper.readTree(new URL(addr + "/lookup?topic=" + topicEncoded));
                 LogManager.getLogger(this).debug("Server connection information: {}", jsonNode);
