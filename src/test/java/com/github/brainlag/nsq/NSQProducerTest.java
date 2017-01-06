@@ -1,5 +1,6 @@
 package com.github.brainlag.nsq;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.brainlag.nsq.exceptions.NSQException;
 import com.github.brainlag.nsq.lookup.DefaultNSQLookup;
 import com.github.brainlag.nsq.lookup.NSQLookup;
@@ -27,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class NSQProducerTest {
+    private ObjectMapper mapper = new ObjectMapper();
 
     private NSQConfig getSnappyConfig() {
         final NSQConfig config = new NSQConfig();
@@ -68,7 +70,7 @@ public class NSQProducerTest {
     @Test
     public void testProduceOneMsgSnappy() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQProducer producer = new NSQProducer();
@@ -96,7 +98,7 @@ public class NSQProducerTest {
     public void testProduceOneMsgDeflate() throws NSQException, TimeoutException, InterruptedException {
         System.setProperty("io.netty.noJdkZlibDecoder", "false");
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQProducer producer = new NSQProducer();
@@ -123,7 +125,7 @@ public class NSQProducerTest {
     @Test
     public void testProduceOneMsgSsl() throws InterruptedException, NSQException, TimeoutException, SSLException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQProducer producer = new NSQProducer();
@@ -150,7 +152,7 @@ public class NSQProducerTest {
     @Test
     public void testProduceOneMsgSslAndSnappy() throws InterruptedException, NSQException, TimeoutException, SSLException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQProducer producer = new NSQProducer();
@@ -178,7 +180,7 @@ public class NSQProducerTest {
     public void testProduceOneMsgSslAndDeflat() throws InterruptedException, NSQException, TimeoutException, SSLException {
         System.setProperty("io.netty.noJdkZlibDecoder", "false");
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQProducer producer = new NSQProducer();
@@ -206,7 +208,7 @@ public class NSQProducerTest {
     @Test
     public void testProduceMoreMsg() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
@@ -235,7 +237,7 @@ public class NSQProducerTest {
     @Test
     public void testParallelProducer() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
@@ -271,7 +273,7 @@ public class NSQProducerTest {
     @Test
     public void testMultiMessage() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
@@ -301,7 +303,7 @@ public class NSQProducerTest {
     @Test
     public void testBackoff() throws InterruptedException, NSQException, TimeoutException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {
@@ -335,7 +337,7 @@ public class NSQProducerTest {
     @Test
     public void testScheduledCallback() throws NSQException, TimeoutException, InterruptedException {
         AtomicInteger counter = new AtomicInteger(0);
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQConsumer consumer = new NSQConsumer(lookup, "test3", "testconsumer", (message) -> {});
@@ -349,7 +351,7 @@ public class NSQProducerTest {
 
     @Test
     public void testEphemeralTopic() throws InterruptedException, NSQException, TimeoutException {
-        NSQLookup lookup = new DefaultNSQLookup();
+        NSQLookup lookup = new DefaultNSQLookup(mapper);
         lookup.addLookupAddress(Nsq.getNsqLookupdHost(), 4161);
 
         NSQProducer producer = new NSQProducer();

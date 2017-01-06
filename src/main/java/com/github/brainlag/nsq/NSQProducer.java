@@ -85,8 +85,7 @@ public class NSQProducer {
 
         Connection c = this.getConnection();
         try {
-            NSQCommand command = NSQCommand.instance("MPUB " + topic);
-            command.setData(messages);
+            NSQCommand command = NSQCommand.multiPublish(topic, messages);
 
 
             NSQFrame frame = c.commandAndWait(command);
@@ -110,7 +109,7 @@ public class NSQProducer {
         }
         Connection c = getConnection();
         try {
-            NSQCommand command = NSQCommand.instance("PUB " + topic, message);
+            NSQCommand command = NSQCommand.publish(topic, message);
             NSQFrame frame = c.commandAndWait(command);
             if (frame != null && frame instanceof ErrorFrame) {
                 String err = ((ErrorFrame) frame).getErrorMessage();
