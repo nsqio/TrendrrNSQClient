@@ -70,9 +70,7 @@ public class NSQConsumer implements Closeable {
             started = true;
             //connect once otherwise we might have to wait one lookupPeriod
             connect();
-            scheduler.scheduleAtFixedRate(() -> {
-                connect();
-            }, lookupPeriod, lookupPeriod, TimeUnit.MILLISECONDS);
+            scheduler.scheduleAtFixedRate(() -> connect(), lookupPeriod, lookupPeriod, TimeUnit.MILLISECONDS);
         }
         return this;
     }

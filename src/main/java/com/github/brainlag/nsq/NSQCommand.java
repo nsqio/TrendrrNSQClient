@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NSQCommand {
-    String line;
-    List<byte[]> data = new ArrayList<>();
+    private String line;
+    private List<byte[]> data = new ArrayList<>();
 
-    private NSQCommand() { /** no instances */ }
+    private NSQCommand() { /** no instances */}
 
     public void addBytes(byte[] bytes) {
         data.add(bytes);
