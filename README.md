@@ -9,7 +9,7 @@ heavily forked of TrendrrNSQClient.
 <dependency>
   <groupId>com.github.brainlag</groupId>
   <artifactId>nsq-client</artifactId>
-  <version>1.0.0.RC2</version>
+  <version>1.0.0.RC3</version>
 </dependency>
 ```
 
