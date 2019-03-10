@@ -97,6 +97,9 @@ public class NSQProducer {
                 if (err.startsWith("E_BAD_MESSAGE")) {
                     throw new BadMessageException(err);
                 }
+                else{
+                    throw new NSQException(err);
+                }
             }
         } finally {
             pool.returnObject(c.getServerAddress(), c);
@@ -118,6 +121,9 @@ public class NSQProducer {
                 }
                 if (err.startsWith("E_BAD_MESSAGE")) {
                     throw new BadMessageException(err);
+                }
+                else{
+                    throw new NSQException(err);
                 }
             }
         } finally {
